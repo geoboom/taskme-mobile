@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import axios from 'axios';
 import { createMaterialTopTabNavigator } from 'react-navigation';
 import { ToastAndroid } from 'react-native';
@@ -7,6 +8,10 @@ import CONSTANTS from '../../constants';
 import UserAuthForm from '../../components/UserAuthForm';
 
 class LoginScreen extends Component {
+  static propTypes = {
+    screenProps: PropTypes.object.isRequired,
+  };
+
   render() {
     const { error, handleLogin } = this.props.screenProps;
 

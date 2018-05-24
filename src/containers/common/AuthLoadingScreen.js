@@ -22,9 +22,7 @@ export default class AuthLoadingScreen extends Component {
   _bootstrapAsync = async () => {
     try {
       const { navigation, screenProps } = this.props;
-      const {
-        setUserData, getRefreshToken,
-      } = screenProps;
+      const { setUserData, getRefreshToken } = screenProps;
       const refreshToken = await getRefreshToken();
 
       if (!refreshToken) {
@@ -34,7 +32,10 @@ export default class AuthLoadingScreen extends Component {
       const payload = {
         refreshToken,
       };
-      const response = await axios.post(`${CONSTANTS.SERVER_URL}/auth/token`, payload);
+      const response = await axios.post(
+        `${CONSTANTS.SERVER_URL}/auth/token`,
+        payload,
+      );
       const { userData } = response.data;
 
       await setUserData(userData);
@@ -61,9 +62,7 @@ export default class AuthLoadingScreen extends Component {
       <View>
         <ActivityIndicator />
         <StatusBar barStyle="default" />
-        <Text style={{ color: 'red' }}>
-          {this.state.error.toString()}
-        </Text>
+        <Text style={{ color: 'red' }}>{this.state.error.toString()}</Text>
       </View>
     );
   }
