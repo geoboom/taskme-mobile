@@ -1,6 +1,7 @@
 import { AppRegistry, YellowBox } from 'react-native';
-import App from './src/App';
+
+import Root from './src/Root';
 
 YellowBox.ignoreWarnings(['Warning: isMounted(...) is deprecated', 'Module RCTImageLoader']);
 
-AppRegistry.registerComponent('taskMeMobile', () => App);
+AppRegistry.registerComponent('taskMeMobile', () => Root);
