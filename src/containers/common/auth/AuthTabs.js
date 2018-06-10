@@ -1,10 +1,10 @@
-import React, { Component, Children, cloneElement } from 'react';
-import { View, Text, Button, TextInput, ActivityIndicator, ToastAndroid } from 'react-native';
+import React, { Component } from 'react';
+import { View, Text, Button, TextInput, ActivityIndicator } from 'react-native';
 import { connect } from 'react-redux';
 import { createMaterialTopTabNavigator } from 'react-navigation';
 
+import AlertToast from '../../../components/AlertToast';
 import { userLogin, userSignup } from '../../../actions/userActions';
-import { alertClear, alertSuccess } from '../../../actions/alertActions';
 
 class UserForm extends Component {
   state = {
@@ -78,13 +78,16 @@ class LoginScreen extends Component {
     const { formClear, errorMessage, isLoading } = this.props;
 
     return (
-      <UserForm
-        buttonTitle="Login"
-        submit={this.handleSubmit}
-        errorMessage={errorMessage.login}
-        isLoading={isLoading.login}
-        formClear={formClear.login}
-      />
+      <View>
+        <AlertToast />
+        <UserForm
+          buttonTitle="Login"
+          submit={this.handleSubmit}
+          errorMessage={errorMessage.login}
+          isLoading={isLoading.login}
+          formClear={formClear.login}
+        />
+      </View>
     );
   }
 }
@@ -100,63 +103,19 @@ class SignupScreen extends Component {
     const { formClear, errorMessage, isLoading } = this.props;
 
     return (
-      <UserForm
-        buttonTitle="Signup"
-        submit={this.handleSubmit}
-        errorMessage={errorMessage.signup}
-        isLoading={isLoading.signup}
-        formClear={formClear.signup}
-      />
+      <View>
+        <AlertToast />
+        <UserForm
+          buttonTitle="Signup"
+          submit={this.handleSubmit}
+          errorMessage={errorMessage.signup}
+          isLoading={isLoading.signup}
+          formClear={formClear.signup}
+        />
+      </View>
     );
   }
 }
-
-const WithAlertWrapper = (WrappedComponent) => (
-  class WithAlert extends Component {
-    state = {
-      type: '',
-      message: '',
-    };
-
-    static getDerivedStateFromProps(props, state) {
-      const { alert, dispatch } = props;
-      const { type, message } = alert;
-
-      if (!(type === state.type && message === state.message)) {
-        dispatch(alertClear());
-        return {
-          ...state,
-          type,
-          message,
-        };
-      }
-
-      return state;
-    }
-
-    render() {
-      const { alert, ...rest } = this.props;
-      const { type, message } = this.state;
-
-      return (
-        <View>
-          <WrappedComponent {...rest} />
-          {
-            type && message
-              ?
-              ToastAndroid.showWithGravity(
-                message,
-                ToastAndroid.SHORT,
-                ToastAndroid.CENTER,
-              )
-              :
-              null
-          }
-        </View>
-      );
-    }
-  }
-);
 
 const mapStateToProps = (state) => {
   const {
@@ -166,22 +125,21 @@ const mapStateToProps = (state) => {
   } = state.user;
 
   return {
-    alert: state.alert,
     isLoading,
     errorMessage,
     formClear,
   };
 };
 
-const WithAlertLoginScreen = WithAlertWrapper(LoginScreen);
-const WithAlertSignupScreen = WithAlertWrapper(SignupScreen);
+const ConnectedAlertLoginScreen = connect(mapStateToProps)(LoginScreen);
+const ConnectedAlertSignupScreen = connect(mapStateToProps)(SignupScreen);
 
 const AuthTabs = createMaterialTopTabNavigator({
   Login: {
-    screen: connect(mapStateToProps)(WithAlertLoginScreen),
+    screen: ConnectedAlertLoginScreen,
   },
   Signup: {
-    screen: connect(mapStateToProps)(WithAlertSignupScreen),
+    screen: ConnectedAlertSignupScreen,
   },
 });
 

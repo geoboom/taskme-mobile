@@ -17,6 +17,7 @@ const initialState = {
   },
   refreshToken: null,
   accessToken: null,
+  users: {},
   userData: {
     _id: null,
     username: null,
@@ -98,6 +99,7 @@ const userReducer = (state = initialState, action) => {
         refreshToken: action.payload.refreshToken,
         userData: { ...state.userData, ...action.payload.userData },
         formClear: {
+          ...state.formClear,
           login: true,
         },
       };
@@ -107,11 +109,27 @@ const userReducer = (state = initialState, action) => {
         isLoading: isLoading(state.isLoading, action),
         errorMessage: errorMessage(state.errorMessage, action),
         formClear: {
+          ...state.formClear,
           signup: true,
         },
       };
     case actionTypes.USER_LOGOUT:
       return initialState;
+    case actionTypes.USER_GET_ALL: {
+      const { d, r } = action.payload;
+      if (r) {
+        const transformed = {};
+        d.forEach((user) => {
+          transformed[user._id] = user;
+        });
+
+        return {
+          ...state,
+          users: transformed,
+        };
+      }
+      break;
+    }
     default:
       return {
         ...state,

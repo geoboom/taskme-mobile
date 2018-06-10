@@ -7,6 +7,7 @@ import navReducer from './navReducer';
 import alertReducer from './alertReducer';
 import jobReducer from './jobReducer';
 import taskReducer from './taskReducer';
+import seqCountReducer from './seqCountReducer';
 
 export default combineReducers({
   job: jobReducer,
@@ -14,4 +15,5 @@ export default combineReducers({
   user: userReducer,
   nav: navReducer,
   alert: alertReducer,
+  seqCount: seqCountReducer,
 });

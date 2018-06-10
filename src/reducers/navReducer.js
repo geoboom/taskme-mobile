@@ -1,3 +1,5 @@
+import { NavigationActions } from 'react-navigation';
+
 import AppSwitchNav from '../containers';
 import AuthTabs from '../containers/common/auth/AuthTabs';
 import JobStack from '../containers/admin/jobs';
@@ -9,12 +11,6 @@ const navReducer = (state = initialNavState, action) => {
   let nextState;
 
   switch (action.type) {
-    case jobTaskActionTypes.JOB_DETAILS_VIEW:
-      nextState = AppSwitchNav.router.getStateForAction(
-        JobStack.router.getActionForPathAndParams('JobDetailsScreen'),
-        state,
-      );
-      break;
     case userActionTypes.USER_SIGNUP_SUCCESS:
       nextState = AppSwitchNav.router.getStateForAction(
         AuthTabs.router.getActionForPathAndParams('Login'),
@@ -28,12 +24,39 @@ const navReducer = (state = initialNavState, action) => {
         state,
       );
       break;
-    case userActionTypes.USER_AUTH_SUCCESS:
-    case userActionTypes.USER_LOGIN_SUCCESS:
-      nextState = AppSwitchNav.router.getStateForAction(
-        AppSwitchNav.router.getActionForPathAndParams('Admin'),
-        state,
-      );
+    // case userActionTypes.USER_AUTH_SUCCESS:
+    case userActionTypes.USER_LOGIN_SUCCESS: {
+      const { group } = action.payload.userData;
+
+      if (group === 'admin') {
+        nextState = AppSwitchNav.router.getStateForAction(
+          AppSwitchNav.router.getActionForPathAndParams('Admin'),
+          state,
+        );
+      } else {
+        nextState = AppSwitchNav.router.getStateForAction(
+          AppSwitchNav.router.getActionForPathAndParams('Worker'),
+          state,
+        );
+      }
+
+      break;
+    }
+    case jobTaskActionTypes.TASK_ADD_ASSIGNMENT:
+    case jobTaskActionTypes.TASK_EDIT:
+    case jobTaskActionTypes.TASK_ADD:
+    case jobTaskActionTypes.JOB_EDIT:
+    case jobTaskActionTypes.JOB_ADD:
+      if (action.payload.r) {
+        // redirect to JobsScreen
+        nextState = AppSwitchNav.router.getStateForAction(
+          // JobStack.router.getActionForPathAndParams('Jobs'),
+          NavigationActions.back(),
+          state,
+        );
+      } else {
+        nextState = AppSwitchNav.router.getStateForAction(action, state);
+      }
       break;
     default:
       nextState = AppSwitchNav.router.getStateForAction(action, state);

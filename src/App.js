@@ -9,7 +9,7 @@ import {
 } from 'react-navigation';
 
 import AppSwitchNav from './containers';
-import socketActionTypes from './constants';
+import { socketActionTypes } from './constants';
 
 const addListener = createReduxBoundAddListener('root');
 
@@ -22,13 +22,11 @@ class App extends Component {
     this.props.dispatch({
       type: socketActionTypes.DISCONNECT,
     });
-    console.log('disconnect');
   }
   onBackPress = () => {
     const { dispatch, nav } = this.props;
-    if (nav.index === 0) { return false; }
     dispatch(NavigationActions.back());
-    return true;
+    return nav !== this.props.nav;
   };
 
   render() {

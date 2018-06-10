@@ -12,8 +12,9 @@ import { Card } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 import {
-  removeJob,
-} from '../../../actions/jobActions';
+  removeAssignment,
+  assignmentActivity,
+} from '../../../actions/taskActions';
 import AlertToast from '../../../components/AlertToast';
 
 const headerStyle = {
@@ -24,9 +25,9 @@ const headerTitleStyle = {
   textAlign: 'center',
 };
 
-const AddJobButton = ({ navigation }) => (
+const AddAssignmentButton = ({ navigation, taskId }) => (
   <TouchableOpacity
-    onPress={() => navigation.navigate('JobForm')}
+    onPress={() => navigation.navigate('AssignmentForm', { taskId })}
   >
     <View
       style={{
@@ -48,9 +49,9 @@ const MenuButton = ({ navigation }) => (
   >
     <View
       style={{
-          paddingLeft: 10,
-          paddingTop: 5,
-        }}
+        paddingLeft: 10,
+        paddingTop: 5,
+      }}
     >
       <Icon
         name="md-menu"
@@ -60,10 +61,9 @@ const MenuButton = ({ navigation }) => (
   </TouchableOpacity>
 );
 
-
-const jobItem = (item, onEdit, onViewTasks, onSelect) => {
+const assignmentItem = (item, onEdit, onView, onSelect) => {
   const {
-    title, description, category, component, pending,
+    assignedTo, assignedBy, assignedOn, status, isLeader, pending,
   } = item;
 
   return (
@@ -112,7 +112,7 @@ const jobItem = (item, onEdit, onViewTasks, onSelect) => {
                 flexWrap: 'wrap',
               }}
             >
-              Title: {title}
+              Assigned to: {assignedTo}
             </Text>
             <Text
               style={{
@@ -120,21 +120,31 @@ const jobItem = (item, onEdit, onViewTasks, onSelect) => {
                 flexWrap: 'wrap',
               }}
             >
-              Description: {description || '-'}
+              Assigned by: {assignedBy}
             </Text>
             <Text
               style={{
                 fontSize: 18,
+                flexWrap: 'wrap',
               }}
             >
-              Category: {category}
+              Assigned on: {new Date(assignedOn).toLocaleString()}
             </Text>
             <Text
               style={{
                 fontSize: 18,
+                flexWrap: 'wrap',
               }}
             >
-              Component: {component}
+              Status: {status}
+            </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                flexWrap: 'wrap',
+              }}
+            >
+              Is leader: {isLeader ? 'Yes' : 'No'}
             </Text>
           </View>
           <View
@@ -154,7 +164,7 @@ const jobItem = (item, onEdit, onViewTasks, onSelect) => {
               />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={pending ? null : onViewTasks}
+              onPress={pending ? null : onView}
             >
               <Icon
                 name="md-open"
@@ -168,40 +178,44 @@ const jobItem = (item, onEdit, onViewTasks, onSelect) => {
   );
 };
 
-const renderJobs = (jobs, jobsLoading, onEdit, onViewTasks, onSelect) => (
+const renderAssignments = (assignments, assignmentsLoading, onEdit, onView, onSelect, users) => (
   <View>
     {
-      jobsLoading
+      assignmentsLoading
         ?
           <ActivityIndicator />
         :
           <View>
             {
-            jobs.length > 0
+            assignments.length > 0
               ?
                 <FlatList
-                  data={jobs}
-                  keyExtractor={job => job._id}
+                  data={assignments}
+                  keyExtractor={assn => assn.assignedTo}
                   renderItem={({ item }) =>
-                  jobItem(
-                    item,
-                    () => onEdit(item),
-                    () => onViewTasks(item),
-                    () => onSelect(item),
-                  )
-                }
+                    assignmentItem(
+                      {
+                        ...item,
+                        assignedTo: users[item.assignedTo].username,
+                        assignedBy: users[item.assignedBy].username,
+                      },
+                      () => onEdit(item),
+                      () => onView(item),
+                      () => onSelect(item),
+                    )
+                  }
                 />
               :
-                <Text>No jobs</Text>
+                <Text>No assignments</Text>
           }
           </View>
     }
   </View>
 );
 
-const RemoveJobModal = ({
+const RemoveAssignmentModal = ({
   visible,
-  onJobRemove,
+  onAssignmentRemove,
   modalClose,
 }) => (
   <Modal
@@ -232,14 +246,14 @@ const RemoveJobModal = ({
         }}
       >
         <TouchableOpacity
-          onPress={onJobRemove}
+          onPress={onAssignmentRemove}
         >
           <Text
             style={{
               fontSize: 18,
             }}
           >
-            Remove Job
+            Remove Assignment
           </Text>
         </TouchableOpacity>
       </View>
@@ -247,76 +261,81 @@ const RemoveJobModal = ({
   </Modal>
 );
 
-class JobsScreen extends Component {
-  static navigationOptions = ({ navigation }) => ({
-    headerStyle,
-    headerTitleStyle,
-    title: 'Jobs',
-    headerLeft: <MenuButton navigation={navigation} />,
-    headerRight: <AddJobButton navigation={navigation} />,
-  });
+class AssignmentsScreen extends Component {
+  static navigationOptions = ({ navigation }) => {
+    const params = navigation.state.params || {};
+    const { _id } = params.viewedTask || {};
 
-  state = {
-    removeJobModalVisible: false,
-    jobSelected: null,
-  };
-
-
-  handleJobViewTasks = (job) => {
-    const { navigation } = this.props;
-
-    navigation.navigate('JobTasks', { viewedJob: job });
-  };
-
-  handleJobEdit = (job) => {
-    const { navigation } = this.props;
-
-    navigation.navigate('JobForm', { editedJob: job });
-  };
-
-  handleJobSelect = (job) => {
-    // open modal
-    this.setState({
-      jobSelected: job,
-      removeJobModalVisible: true,
+    return ({
+      headerStyle,
+      headerTitleStyle,
+      title: _id,
+      headerRight: _id ? <AddAssignmentButton navigation={navigation} taskId={_id} /> : null,
+      ..._id ? {} : {
+        headerLeft: <MenuButton navigation={navigation} />,
+      },
     });
   };
 
-  handleJobRemove = () => {
-    const { _id } = this.state.jobSelected;
-    const { dispatch } = this.props;
+  state = {
+    removeAssignmentModalVisible: false,
+    assignmentSelected: null,
+  };
 
-    dispatch(removeJob(_id));
+  handleAssignmentViewLog = (assignment) => {
+    const { navigation } = this.props;
+
+    navigation.navigate('AssignmentLog', { viewedAssignment: assignment });
+  };
+
+  handleAssignmentSelect = (assignment) => {
+    this.setState({
+      assignmentSelected: assignment,
+      removeAssignmentModalVisible: true,
+    });
+  };
+
+  handleAssignmentEdit = (assignment) => {
+    console.log('handleAssignmentEdit', assignment);
+  };
+
+  handleAssignmentRemove = () => {
+    const { assignedTo } = this.state.assignmentSelected;
+    const { dispatch, navigation } = this.props;
+    const { _id } = navigation.getParam('viewedTask', {});
+
+    dispatch(removeAssignment(_id, assignedTo));
 
     this.setState({
-      jobSelected: null,
-      removeJobModalVisible: false,
+      assignmentSelected: null,
+      removeAssignmentModalVisible: false,
     });
   };
 
   render() {
-    const { jobs, jobsLoading } = this.props;
+    const { assignmentsLoading, assignments, users } = this.props;
 
     return (
       <View>
         <AlertToast />
-        <RemoveJobModal
-          visible={this.state.removeJobModalVisible}
-          onJobRemove={this.handleJobRemove}
+        <RemoveAssignmentModal
+          visible={this.state.removeAssignmentModalVisible}
+          onAssignmentRemove={this.handleAssignmentRemove}
           modalClose={() =>
             this.setState({
-              jobSelected: null,
-              removeJobModalVisible: false,
+              assignmentSelected: null,
+              removeAssignmentModalVisible: false,
             })
           }
         />
         {
-          renderJobs(
-            jobs,
-            jobsLoading,
-            this.handleJobEdit,
-            this.handleJobViewTasks,
-            this.handleJobSelect,
+          renderAssignments(
+            assignments,
+            assignmentsLoading,
+            this.handleAssignmentEdit,
+            this.handleAssignmentViewLog,
+            this.handleAssignmentSelect,
+            users,
           )
         }
       </View>
@@ -324,19 +343,14 @@ class JobsScreen extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
-  const { job: { jobs, jobsLoading } } = state;
+const mapStateToProps = (state, ownProps) => {
+  const { user: { users }, task: { tasks } } = state;
+  const { _id } = ownProps.navigation.getParam('viewedTask', {});
 
   return {
-    jobs: Object.keys(jobs)
-      .map(id => ({
-        ...jobs[id],
-        id,
-      }))
-      .filter(x => !x.deleted)
-      .sort((a, b) => a.title.localeCompare(b.title)),
-    jobsLoading,
+    users,
+    assignments: tasks[_id].assignments,
   };
 };
 
-export default connect(mapStateToProps)(JobsScreen);
+export default connect(mapStateToProps)(AssignmentsScreen);

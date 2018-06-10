@@ -1,47 +1,36 @@
 import React from 'react';
-import { Text } from 'react-native';
 import { createStackNavigator } from 'react-navigation';
+import getSlideFromRightTransition from 'react-navigation-slide-from-right-transition';
 
 import JobsScreen from './JobsScreen';
-import JobDetailsScreen from './JobDetailsScreen';
-
-const headerStyle = {
-  backgroundColor: '#4C3E54',
-};
-
-const headerTitleStyle = {
-  textAlign: 'center',
-};
-
-const MenuButton = ({ navigation }) => {
-  return (
-    <Text
-      style={{
-        color: 'white',
-      }}
-      onPress={navigation.openDrawer}
-    >
-      Menu
-    </Text>
-  );
-};
+import JobFormScreen from './JobFormScreen';
+import TasksScreen from '../../common/tasks/TasksScreen';
+import TaskFormScreen from '../../common/tasks/TaskFormScreen';
+import AssignmentsScreen from '../../common/assignments/AssignmentsScreen';
+import AssignmentFormScreen from '../../common/assignments/AssignmentFormScreen';
 
 const JobStack = createStackNavigator({
   Jobs: {
     screen: JobsScreen,
   },
-  // JobDetails: {
-  //   screen: JobDetailsScreen,
-  // },
+  JobForm: {
+    screen: JobFormScreen,
+  },
+  JobTasks: {
+    screen: TasksScreen,
+  },
+  TaskForm: {
+    screen: TaskFormScreen,
+  },
+  TaskAssignments: {
+    screen: AssignmentsScreen,
+  },
+  AssignmentForm: {
+    screen: AssignmentFormScreen,
+  },
 }, {
-  headerMode: 'float',
-  navigationOptions: ({ navigation }) => ({
-    headerStyle,
-    headerTitleStyle,
-    title: 'Jobs',
-    headerTintColor: 'white',
-    headerLeft: <MenuButton navigation={navigation} />,
-  }),
+  initialRouteName: 'Jobs',
+  transitionConfig: getSlideFromRightTransition,
 });
 
 export default JobStack;

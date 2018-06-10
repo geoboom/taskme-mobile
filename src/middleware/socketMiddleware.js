@@ -2,22 +2,17 @@ import io from 'socket.io-client';
 import jwtDecode from 'jwt-decode';
 import axios from 'axios';
 
-import {
-  alertError,
-} from '../actions/alertActions';
+import { alertError } from '../actions/alertActions';
 import {
   connection,
   socketActionTypes,
+  seqCountActionTypes,
   jobTaskActionTypes,
   userActionTypes,
 } from '../constants';
 
 const refreshAccessToken = async (accessToken, refreshToken, successCb, failureCb) => {
-  let exp;
-
-  if (accessToken) {
-    exp = jwtDecode(accessToken).exp;
-  }
+  const exp = accessToken ? jwtDecode(accessToken).exp : null;
 
   if (!exp || exp < (Date.now() / 1000) - 60) {
     // if token within 1 min of expiry
@@ -63,7 +58,7 @@ const setupSocket = async (store, next) => {
           accessToken: newAccessToken,
         },
       });
-      socket = io(`${connection.WS_URL}?tok=${accessToken}`);
+      socket = io(`${connection.SERVER_URL}?tok=${accessToken}`);
     },
     (error) => {
       next({
@@ -77,12 +72,47 @@ const setupSocket = async (store, next) => {
   );
 
   if (socket) {
-    const events = Object.keys(jobTaskActionTypes);
-    events.forEach((event) => {
-      socket.on(event, payload => next({
-        type: jobTaskActionTypes[event],
-        payload,
-      }));
+    const eventNames = Object.keys({
+      ...jobTaskActionTypes,
+      USER_GET_ALL: 'user.getAll',
+      USER_GET_ALL_ERROR: 'user.getAll.error',
+    });
+    eventNames.forEach((eventName) => {
+      const event = {
+        ...jobTaskActionTypes,
+        USER_GET_ALL: 'user.getAll',
+        USER_GET_ALL_ERROR: 'user.getAll.error',
+      }[eventName];
+
+      socket.on(event, (payload) => {
+        console.log(`${event} success`);
+        next({
+          type: event,
+          payload: {
+            ...payload,
+            r: true,
+          },
+        });
+      });
+
+      socket.on(`${event}.error`, (payload) => {
+        console.log(`${event} failure`);
+        next({
+          type: `${event}.error`,
+          payload,
+        });
+        next(alertError(`${event} failed. Please try again.`));
+      });
+    });
+
+    socket.on('connect', () => {
+      // bootstrap application state
+      socket.emit(userActionTypes.USER_GET_ALL);
+      socket.emit(jobTaskActionTypes.TASK_GET_ALL);
+      socket.emit(jobTaskActionTypes.TASK_GET_ASSIGNED);
+      socket.emit(jobTaskActionTypes.JOB_GET_ALL);
+      socket.emit(jobTaskActionTypes.JOB_CATEGORY_GET_ALL);
+      socket.emit(jobTaskActionTypes.JOB_COMPONENT_GET_ALL);
     });
 
     socket.on('reconnect_attempt', async (attemptNumber) => {
@@ -115,6 +145,7 @@ const setupSocket = async (store, next) => {
     socket.on('error', (error) => {
       // check if TokenExpiredError and handle it
       console.log('socket.io error:', error);
+      next(alertError('Error:', error.toString()));
     });
 
     return socket;
@@ -125,35 +156,47 @@ const setupSocket = async (store, next) => {
 
 const socketMiddleware = (() => {
   let socket = null;
-  let socketEvent;
+  let isSocketEvent;
 
-  return store => next => (action) => {
+  return store => next => async (action) => {
     switch (action.type) {
       case socketActionTypes.CONNECT:
         if (socket) {
           socket.disconnect(true);
         }
-        socket = setupSocket(store, next);
+        socket = await setupSocket(store, next);
         break;
       case socketActionTypes.DISCONNECT:
         if (socket) {
           socket.disconnect(true);
         }
         socket = null;
+        next({ type: userActionTypes.USER_LOGOUT });
         break;
       default:
-        socketEvent = jobTaskActionTypes[action.type];
+        isSocketEvent = Object.values({
+          ...jobTaskActionTypes,
+          USER_GET_ALL: 'user.getAll',
+          USER_GET_ALL_ERROR: 'user.getAll.error',
+        }).includes(action.type);
 
-        if (!socketEvent) {
-          return next(action);
+        if (!isSocketEvent) {
+          next(action);
+          break;
         }
 
         if (!socket) {
-          store.dispatch({ type: socketActionTypes.CONNECT });
+          next(alertError('Connection error.'));
+        } else {
+          const payload = {
+            d: action.payload,
+            i: store.getState().seqCount.i,
+          };
+          socket.emit(action.type, payload);
+          next({ type: action.type, payload });
+          next({ type: seqCountActionTypes.SEQ_INCREMENT });
         }
-        socket.emit(socketEvent, action.payload);
     }
-    return next();
   };
 })();
 

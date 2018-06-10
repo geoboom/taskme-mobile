@@ -4,7 +4,6 @@ import { View, Text, ScrollView, Button } from 'react-native';
 import { createDrawerNavigator, DrawerItems, SafeAreaView } from 'react-navigation';
 import { socketActionTypes } from '../../constants';
 
-import JobStack from './jobs';
 import TaskStack from '../common/tasks';
 
 const mapStateToProps = state => ({
@@ -47,10 +46,7 @@ const CustomDrawerComponent = (props) => {
   );
 };
 
-const AdminDrawer = createDrawerNavigator({
-  Jobs: {
-    screen: JobStack,
-  },
+const WorkerDrawer = createDrawerNavigator({
   Tasks: {
     screen: TaskStack,
   },
@@ -58,4 +54,4 @@ const AdminDrawer = createDrawerNavigator({
   contentComponent: connect(mapStateToProps)(CustomDrawerComponent),
 });
 
-export default AdminDrawer;
+export default WorkerDrawer;
