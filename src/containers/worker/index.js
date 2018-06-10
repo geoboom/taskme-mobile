@@ -2,9 +2,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { View, Text, ScrollView, Button } from 'react-native';
 import { createDrawerNavigator, DrawerItems, SafeAreaView } from 'react-navigation';
-import { socketActionTypes } from '../../constants';
 
+import { socketActionTypes } from '../../constants';
 import TaskStack from '../common/tasks';
+import { persistor } from '../../store';
 
 const mapStateToProps = state => ({
   user: state.user,
@@ -39,7 +40,7 @@ const CustomDrawerComponent = (props) => {
         <DrawerItems {...rest} />
         <Button
           title="Logout"
-          onPress={() => { dispatch({ type: socketActionTypes.DISCONNECT }); }}
+          onPress={() => { persistor.purge(); dispatch({ type: socketActionTypes.DISCONNECT }); }}
         />
       </SafeAreaView>
     </ScrollView>

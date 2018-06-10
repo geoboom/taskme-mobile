@@ -24,7 +24,7 @@ const taskReducer = (state = initialState, action) => {
           },
           assignedTasks: {
             ...state.assignedTasks,
-            ...state.assignedTasks[d._id] ? { [d._id]: d } : {},
+            [d._id]: d,
           },
         };
       }

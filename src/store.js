@@ -36,4 +36,4 @@ export const store = createStore(
   applyMiddleware(...middleware),
 );
 
-export const persist = persistStore(store, null, () => { store.dispatch(userAuth()); });
+export const persistor = persistStore(store, null, () => { store.dispatch(userAuth()); });

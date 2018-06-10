@@ -17,5 +17,5 @@ export default createSwitchNavigator({
   },
   Worker: {
     screen: WorkerDrawer,
-  }
+  },
 });
