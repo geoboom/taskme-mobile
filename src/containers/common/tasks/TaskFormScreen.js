@@ -9,6 +9,8 @@ import {
   Picker,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import DatePicker from 'react-native-datepicker';
+import moment from 'moment';
 
 import {
   addTask,
@@ -57,7 +59,7 @@ class TaskFormScreen extends Component {
       title: title || '',
       description: description || '',
       type: type || 'Inspection',
-      dueOn: dueOn ? new Date(dueOn) : new Date(Date.now() + (5 * 24 * 60 * 60 * 1000)),
+      dueOn: dueOn ? moment(dueOn).format('DD-MM-YYYY') : '',
     };
   }
 
@@ -77,6 +79,7 @@ class TaskFormScreen extends Component {
     const editedTask = navigation.getParam('editedTask', {});
     const jobId = navigation.getParam('jobId', null);
     const { _id } = editedTask;
+    const formattedDueOn = moment(dueOn, 'DD-MM-YYYY').endOf('day').toDate();
 
     return (
       _id
@@ -86,7 +89,7 @@ class TaskFormScreen extends Component {
           title,
           description,
           type,
-          dueOn,
+          formattedDueOn,
         ))
         :
         dispatch(addTask(
@@ -94,7 +97,7 @@ class TaskFormScreen extends Component {
           title,
           description,
           type,
-          dueOn,
+          formattedDueOn,
         ))
     );
   };
@@ -155,12 +158,18 @@ class TaskFormScreen extends Component {
         <Text>
           Due on
         </Text>
-        <TextInput
+        <DatePicker
           style={{
-            fontSize: 18,
+            width: 150,
           }}
-          editable={false}
-          value={this.state.dueOn.toLocaleString()}
+          date={this.state.dueOn}
+          mode="date"
+          placeholder="Select date"
+          format="DD-MM-YYYY"
+          minDate={moment().add(1, 'days').format('DD-MM-YYYY')}
+          confirmBtnText="Confirm"
+          cancelBtnText="Cancel"
+          onDateChange={(date) => { this.setState({ dueOn: date }); }}
         />
         {
           formLoading

@@ -44,7 +44,7 @@ const refreshAccessToken = async (accessToken, refreshToken, successCb, failureC
 };
 
 const setupSocket = async (store, next) => {
-  const { accessToken, refreshToken } = store.getState().user;
+  const { accessToken, refreshToken, userData } = store.getState().user;
 
   // check if jwt expired before connecting
   let socket;
@@ -74,12 +74,14 @@ const setupSocket = async (store, next) => {
   if (socket) {
     const eventNames = Object.keys({
       ...jobTaskActionTypes,
+      USER: 'user',
       USER_GET_ALL: 'user.getAll',
       USER_GET_ALL_ERROR: 'user.getAll.error',
     });
     eventNames.forEach((eventName) => {
       const event = {
         ...jobTaskActionTypes,
+        USER: 'user',
         USER_GET_ALL: 'user.getAll',
         USER_GET_ALL_ERROR: 'user.getAll.error',
       }[eventName];
@@ -106,13 +108,23 @@ const setupSocket = async (store, next) => {
     });
 
     socket.on('connect', () => {
+      // dispatch login_success
+      next({
+        type: socketActionTypes.CONNECT,
+        group: userData.group,
+        r: true,
+      });
       // bootstrap application state
       socket.emit(userActionTypes.USER_GET_ALL);
-      socket.emit(jobTaskActionTypes.TASK_GET_ALL);
-      socket.emit(jobTaskActionTypes.TASK_GET_ASSIGNED);
-      socket.emit(jobTaskActionTypes.JOB_GET_ALL);
-      socket.emit(jobTaskActionTypes.JOB_CATEGORY_GET_ALL);
-      socket.emit(jobTaskActionTypes.JOB_COMPONENT_GET_ALL);
+      if (userData.group === 'worker') {
+        socket.emit(jobTaskActionTypes.TASK_GET_ASSIGNED);
+      }
+      if (userData.group === 'admin') {
+        socket.emit(jobTaskActionTypes.TASK_GET_ALL);
+        socket.emit(jobTaskActionTypes.JOB_GET_ALL);
+        socket.emit(jobTaskActionTypes.JOB_CATEGORY_GET_ALL);
+        socket.emit(jobTaskActionTypes.JOB_COMPONENT_GET_ALL);
+      }
     });
 
     socket.on('reconnect_attempt', async (attemptNumber) => {
@@ -144,8 +156,10 @@ const setupSocket = async (store, next) => {
 
     socket.on('error', (error) => {
       // check if TokenExpiredError and handle it
-      console.log('socket.io error:', error);
-      next(alertError('Error:', error.toString()));
+      next({
+        type: socketActionTypes.ERROR,
+        error,
+      });
     });
 
     return socket;

@@ -3,7 +3,7 @@ import { NavigationActions } from 'react-navigation';
 import AppSwitchNav from '../containers';
 import AuthTabs from '../containers/common/auth/AuthTabs';
 import JobStack from '../containers/admin/jobs';
-import { userActionTypes, jobTaskActionTypes } from '../constants';
+import { userActionTypes, jobTaskActionTypes, socketActionTypes } from '../constants';
 
 const initialNavState = AppSwitchNav.router.getStateForAction(AppSwitchNav.router.getActionForPathAndParams('AuthLoading'));
 
@@ -25,19 +25,28 @@ const navReducer = (state = initialNavState, action) => {
       );
       break;
     // case userActionTypes.USER_AUTH_SUCCESS:
-    case userActionTypes.USER_LOGIN_SUCCESS: {
-      const { group } = action.payload.userData;
+    case socketActionTypes.ERROR: {
+      nextState = AppSwitchNav.router.getStateForAction(
+        AppSwitchNav.router.getActionForPathAndParams('SocketError', { error: action.error }),
+        state,
+      );
+      break;
+    }
+    case socketActionTypes.CONNECT: {
+      const { group, r } = action;
 
-      if (group === 'admin') {
-        nextState = AppSwitchNav.router.getStateForAction(
-          AppSwitchNav.router.getActionForPathAndParams('Admin'),
-          state,
-        );
-      } else {
-        nextState = AppSwitchNav.router.getStateForAction(
-          AppSwitchNav.router.getActionForPathAndParams('Worker'),
-          state,
-        );
+      if (r) {
+        if (group === 'admin') {
+          nextState = AppSwitchNav.router.getStateForAction(
+            AppSwitchNav.router.getActionForPathAndParams('Admin'),
+            state,
+          );
+        } else {
+          nextState = AppSwitchNav.router.getStateForAction(
+            AppSwitchNav.router.getActionForPathAndParams('Worker'),
+            state,
+          );
+        }
       }
 
       break;

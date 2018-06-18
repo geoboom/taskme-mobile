@@ -48,7 +48,7 @@ class TaskFormScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      assignedTo: '' || props.users[0]._id,
+      assignedTo: props.users.length > 0 ? props.users[0]._id : '',
     };
   }
 
@@ -90,6 +90,7 @@ class TaskFormScreen extends Component {
           Assign To
         </Text>
         <Picker
+          style={{ width: 225 }}
           selectedValue={this.state.assignedTo}
           onValueChange={assignedTo => this.setState({ assignedTo })}
         >
@@ -121,7 +122,7 @@ const mapStateToProps = (state) => {
     users: Object.keys(users)
       .map(id => ({
         ...users[id],
-        id,
+        _id: id,
       }))
       .filter(user => user.group !== 'admin')
       .sort((a, b) => a.username.localeCompare(b.username)),

@@ -108,7 +108,7 @@ const assignmentItem = (item, onEdit, onView, onSelect) => {
           >
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -116,7 +116,7 @@ const assignmentItem = (item, onEdit, onView, onSelect) => {
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -124,7 +124,7 @@ const assignmentItem = (item, onEdit, onView, onSelect) => {
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -132,7 +132,7 @@ const assignmentItem = (item, onEdit, onView, onSelect) => {
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -140,7 +140,7 @@ const assignmentItem = (item, onEdit, onView, onSelect) => {
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -154,24 +154,7 @@ const assignmentItem = (item, onEdit, onView, onSelect) => {
               justifyContent: 'space-between',
               alignItems: 'flex-end',
             }}
-          >
-            <TouchableOpacity
-              onPress={pending ? null : onEdit}
-            >
-              <Icon
-                name="md-create"
-                size={35}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={pending ? null : onView}
-            >
-              <Icon
-                name="md-open"
-                size={35}
-              />
-            </TouchableOpacity>
-          </View>
+          />
         </View>
       </Card>
     </TouchableOpacity>
@@ -179,13 +162,31 @@ const assignmentItem = (item, onEdit, onView, onSelect) => {
 };
 
 const renderAssignments = (assignments, assignmentsLoading, onEdit, onView, onSelect, users) => (
-  <View>
+  <View
+    style={{
+      flex: 1,
+    }}
+  >
     {
       assignmentsLoading
         ?
-          <ActivityIndicator />
+          <View
+            style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          >
+            <ActivityIndicator
+              size="large"
+            />
+          </View>
         :
-          <View>
+          <View
+            style={{
+              flex: 1,
+            }}
+          >
             {
             assignments.length > 0
               ?
@@ -206,7 +207,15 @@ const renderAssignments = (assignments, assignmentsLoading, onEdit, onView, onSe
                   }
                 />
               :
-                <Text>No assignments</Text>
+                <View
+                  style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                >
+                  <Text>No assignments ;o</Text>
+                </View>
           }
           </View>
     }
@@ -243,18 +252,30 @@ const RemoveAssignmentModal = ({
           backgroundColor: 'white',
           height: 60,
           width: 200,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: 5,
         }}
       >
         <TouchableOpacity
           onPress={onAssignmentRemove}
         >
-          <Text
+          <View
             style={{
-              fontSize: 18,
+              width: 200,
+              padding: 10,
+              alignItems: 'center',
             }}
           >
-            Remove Assignment
-          </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                color: 'black',
+              }}
+            >
+              Remove Assignment
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -316,7 +337,11 @@ class AssignmentsScreen extends Component {
     const { assignmentsLoading, assignments, users } = this.props;
 
     return (
-      <View>
+      <View
+        style={{
+          flex: 1,
+        }}
+      >
         <AlertToast />
         <RemoveAssignmentModal
           visible={this.state.removeAssignmentModalVisible}

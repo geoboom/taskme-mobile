@@ -22,10 +22,6 @@ const taskReducer = (state = initialState, action) => {
             ...state.tasks,
             [d._id]: d,
           },
-          assignedTasks: {
-            ...state.assignedTasks,
-            [d._id]: d,
-          },
         };
       }
       break;
@@ -57,7 +53,7 @@ const taskReducer = (state = initialState, action) => {
         return {
           ...state,
           tasksLoading: false,
-          assignedTasks: transformed,
+          tasks: transformed,
         };
       }
       break;
@@ -195,6 +191,53 @@ const taskReducer = (state = initialState, action) => {
         },
       };
     }
+    // case actionTypes.TASK_REMOVE_ASSIGNMENT: {
+    //   const { d, r } = action.payload;
+    //   console.log('testing', d);
+    //   if (r) {
+    //     return {
+    //       ...state,
+    //       tasks: {
+    //         ...state.tasks,
+    //         [d._id]: {
+    //           ...d,
+    //           pending: false,
+    //         },
+    //       },
+    //     };
+    //   }
+    //
+    //   return {
+    //     ...state,
+    //     tasks: {
+    //       ...state.tasks,
+    //       [d.taskId]: { ...state.tasks[d.taskId], state.tasks[d.taskId].assignments},
+    //     },
+    //   };
+    // }
+    // case actionTypes.TASK_REMOVE_ASSIGNMENT_ERROR: {
+    //   const { d, r } = action.payload;
+    //   if (r) {
+    //     return {
+    //       ...state,
+    //       tasks: {
+    //         ...state.tasks,
+    //         [d._id]: {
+    //           ...d,
+    //           pending: false,
+    //         },
+    //       },
+    //     };
+    //   }
+    //
+    //   return {
+    //     ...state,
+    //     tasks: {
+    //       ...state.tasks,
+    //       [d.taskId]: { ...state.tasks[d.taskId], pending: true },
+    //     },
+    //   };
+    // }
     case actionTypes.TASK_ASSIGNMENT_ACTIVITY: {
       const { d, r } = action.payload;
       if (r) {
@@ -215,6 +258,16 @@ const taskReducer = (state = initialState, action) => {
         tasks: {
           ...state.tasks,
           [d.taskId]: { ...state.tasks[d.taskId], pending: true },
+        },
+      };
+    }
+    case actionTypes.TASK_ASSIGNMENT_ACTIVITY_ERROR: {
+      const { d } = action.payload;
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [d.taskId]: { ...state.tasks[d.taskId], pending: false },
         },
       };
     }

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Card } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/Ionicons';
+import moment from 'moment';
 
 import { removeTask, assignmentActivity } from '../../../actions/taskActions';
 import AlertToast from '../../../components/AlertToast';
@@ -151,11 +152,13 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
   } = item;
   const {
     group,
+    _id,
   } = user;
 
   return (
     <TouchableOpacity
       onLongPress={pending ? null : onSelect}
+      disabled={group !== 'admin'}
     >
       <Card
         containerStyle={{
@@ -195,7 +198,7 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
           >
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -203,7 +206,7 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -211,7 +214,7 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -219,7 +222,7 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -227,19 +230,23 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
-              Due on: {dueOn ? new Date(dueOn).toLocaleString() : '-'}
+              Due on: {dueOn ? moment.utc(dueOn).format('DD-MM-YYYY') : '-'}
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
-              Completed By: {completedBy ? users[completedBy].username : '-'}
+              Completed By: {completedBy && users[completedBy]
+              ? (users[completedBy]._id === _id
+                ? <Text style={{ fontWeight: 'bold' }}>You</Text>
+                : users[completedBy].username)
+              : '-'}
             </Text>
             {group === 'worker' &&
             <View
@@ -247,9 +254,9 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                 }}
-              >
+            >
                 {renderTaskButtons(assnStatus, onActivity)}
-              </View>
+            </View>
             }
           </View>
           {group === 'admin' &&
@@ -285,35 +292,65 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
 };
 
 const renderTasks =
-  (tasks, tasksLoading, user, users, assnStatus, onEdit, onView, onSelect, onActivity) => (
-    <View>
+  (tasks, tasksLoading, user, users, onEdit, onView, onSelect, onActivity) => (
+    <View
+      style={{
+        flex: 1,
+      }}
+    >
       {
         tasksLoading
           ?
-            <ActivityIndicator />
+            <View
+              style={{
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <ActivityIndicator
+                size="large"
+              />
+            </View>
           :
-            <View>
+            <View
+              style={{
+                flex: 1,
+              }}
+            >
               {
               tasks.length > 0
                 ?
                   <FlatList
                     data={tasks}
                     keyExtractor={task => task._id}
-                    renderItem={({ item }) =>
-                    taskItem(
-                      item,
-                      user,
-                      users,
-                      assnStatus,
-                      () => onEdit(item),
-                      () => onView(item),
-                      () => onSelect(item),
-                      status => onActivity(item._id, status),
-                    )
+                    renderItem={({ item }) => {
+                      const assignment = item.assignments
+                      ? item.assignments.find(x => x.assignedTo === user._id) : {};
+
+                      return taskItem(
+                        item,
+                        user,
+                        users,
+                        assignment ? assignment.status : '',
+                        () => onEdit(item),
+                        () => onView(item),
+                        () => onSelect(item),
+                        status => onActivity(item._id, status),
+                      );
+                    }
                   }
                   />
                 :
-                  <Text>No tasks</Text>
+                  <View
+                    style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                  >
+                    <Text>No tasks ;o</Text>
+                  </View>
             }
             </View>
       }
@@ -350,18 +387,30 @@ const RemoveTaskModal = ({
           backgroundColor: 'white',
           height: 60,
           width: 200,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: 5,
         }}
       >
         <TouchableOpacity
           onPress={onTaskRemove}
         >
-          <Text
+          <View
             style={{
-              fontSize: 18,
+              width: 200,
+              padding: 10,
+              alignItems: 'center',
             }}
           >
-            Remove Task
-          </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                color: 'black',
+              }}
+            >
+              Remove Task
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -390,6 +439,11 @@ class TaskScreen extends Component {
     taskSelected: null,
   };
 
+  onActivity = (taskId, activity) => {
+    const { dispatch } = this.props;
+
+    dispatch(assignmentActivity(taskId, activity));
+  };
 
   handleTaskViewAssignments = (task) => {
     const { navigation } = this.props;
@@ -424,19 +478,17 @@ class TaskScreen extends Component {
     });
   };
 
-  onActivity = (taskId, activity) => {
-    const { dispatch } = this.props;
-
-    dispatch(assignmentActivity(taskId, activity));
-  };
-
   render() {
     const {
-      tasks, tasksLoading, user, users, assnStatus,
+      tasks, tasksLoading, user, users,
     } = this.props;
 
     return (
-      <View>
+      <View
+        style={{
+          flex: 1,
+        }}
+      >
         <AlertToast />
         <RemoveTaskModal
           visible={this.state.removeTaskModalVisible}
@@ -454,7 +506,6 @@ class TaskScreen extends Component {
             tasksLoading,
             user,
             users,
-            assnStatus,
             this.handleTaskEdit,
             this.handleTaskViewAssignments,
             this.handleTaskSelect,
@@ -467,47 +518,30 @@ class TaskScreen extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const { task: { tasks, tasksLoading, assignedTasks }, user: { users, userData } } = state;
+  const { task: { tasks, tasksLoading }, user: { users, userData } } = state;
   const { navigation } = ownProps;
   const viewedJob = navigation.getParam('viewedJob', {});
   const {
     _id,
   } = viewedJob;
 
-  const {
-    group,
-    _id: userId,
-  } = userData;
-
-  let t;
-  if (group === 'admin') {
-    t = tasks;
-  } else {
-    t = assignedTasks;
-  }
-
-  let assnStatus = '';
-
   return {
     users,
     user: userData,
-    tasks: Object.keys(t)
+    tasks: Object.keys(tasks)
       .map(id => ({
-        ...t[id],
-        id,
+        ...tasks[id],
+        _id: id,
       }))
-      .filter(x => !x.softDel)
-      .filter(x => (_id ? x.jobId === _id : true))
+      .filter(x => !x.softDel && (_id ? x.jobId === _id : true))
       .filter((x) => {
-        if (group === 'admin') return true;
-        const assn = x.assignments.find(y => y.assignedTo === userId);
-        assnStatus = assn.status;
-
-        return assn ? !assn.softDel : false;
+        if (userData.group !== 'admin') {
+          return x.assignments.find(y => y.assignedTo === userData._id && !y.softDel);
+        }
+        return true;
       })
       .sort((a, b) => a.title.localeCompare(b.title)),
     tasksLoading,
-    assnStatus,
   };
 };
 

@@ -11,9 +11,7 @@ import {
 import { Card } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-import {
-  removeJob,
-} from '../../../actions/jobActions';
+import { removeJob } from '../../../actions/jobActions';
 import AlertToast from '../../../components/AlertToast';
 
 const headerStyle = {
@@ -108,7 +106,7 @@ const jobItem = (item, onEdit, onViewTasks, onSelect) => {
           >
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -116,7 +114,7 @@ const jobItem = (item, onEdit, onViewTasks, onSelect) => {
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
                 flexWrap: 'wrap',
               }}
             >
@@ -124,14 +122,14 @@ const jobItem = (item, onEdit, onViewTasks, onSelect) => {
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
               }}
             >
               Category: {category}
             </Text>
             <Text
               style={{
-                fontSize: 18,
+                fontSize: 16,
               }}
             >
               Component: {component}
@@ -169,13 +167,31 @@ const jobItem = (item, onEdit, onViewTasks, onSelect) => {
 };
 
 const renderJobs = (jobs, jobsLoading, onEdit, onViewTasks, onSelect) => (
-  <View>
+  <View
+    style={{
+      flex: 1,
+    }}
+  >
     {
       jobsLoading
         ?
-          <ActivityIndicator />
+          <View
+            style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+          >
+            <ActivityIndicator
+              size="large"
+            />
+          </View>
         :
-          <View>
+          <View
+            style={{
+              flex: 1,
+            }}
+          >
             {
             jobs.length > 0
               ?
@@ -192,8 +208,16 @@ const renderJobs = (jobs, jobsLoading, onEdit, onViewTasks, onSelect) => (
                 }
                 />
               :
-                <Text>No jobs</Text>
-          }
+                <View
+                  style={{
+                  flex: 1,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                >
+                  <Text>No jobs ;o</Text>
+                </View>
+            }
           </View>
     }
   </View>
@@ -229,18 +253,30 @@ const RemoveJobModal = ({
           backgroundColor: 'white',
           height: 60,
           width: 200,
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: 5,
         }}
       >
         <TouchableOpacity
           onPress={onJobRemove}
         >
-          <Text
+          <View
             style={{
-              fontSize: 18,
+              width: 200,
+              padding: 10,
+              alignItems: 'center',
             }}
           >
-            Remove Job
-          </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                color: 'black',
+              }}
+            >
+              Remove Job
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -298,7 +334,11 @@ class JobsScreen extends Component {
     const { jobs, jobsLoading } = this.props;
 
     return (
-      <View>
+      <View
+        style={{
+          flex: 1,
+        }}
+      >
         <AlertToast />
         <RemoveJobModal
           visible={this.state.removeJobModalVisible}
@@ -331,7 +371,7 @@ const mapStateToProps = (state) => {
     jobs: Object.keys(jobs)
       .map(id => ({
         ...jobs[id],
-        id,
+        _id: id,
       }))
       .filter(x => !x.deleted)
       .sort((a, b) => a.title.localeCompare(b.title)),

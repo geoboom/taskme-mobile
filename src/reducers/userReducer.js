@@ -1,5 +1,6 @@
 import {
   userActionTypes as actionTypes,
+  socketActionTypes,
 } from '../constants';
 
 const initialState = {
@@ -44,7 +45,14 @@ const isLoading = (state = initialState.isLoading, action) => {
         ...state,
         login: true,
       };
-    case actionTypes.USER_LOGIN_SUCCESS:
+    case socketActionTypes.CONNECT:
+      if (action.r) {
+        return {
+          ...state,
+          login: false,
+        };
+      }
+      break;
     case actionTypes.USER_LOGIN_FAILURE:
       return {
         ...state,
@@ -73,8 +81,15 @@ const errorMessage = (state = initialState.errorMessage, action) => {
         ...state,
         signup: null,
       };
+    case socketActionTypes.CONNECT:
+      if (action.r) {
+        return {
+          ...state,
+          login: null,
+        };
+      }
+      break;
     case actionTypes.USER_LOGIN_REQUEST:
-    case actionTypes.USER_LOGIN_SUCCESS:
       return {
         ...state,
         login: null,
@@ -94,8 +109,6 @@ const userReducer = (state = initialState, action) => {
     case actionTypes.USER_LOGIN_SUCCESS:
       return {
         ...state,
-        isLoading: isLoading(state.isLoading, action),
-        errorMessage: errorMessage(state.errorMessage, action),
         refreshToken: action.payload.refreshToken,
         userData: { ...state.userData, ...action.payload.userData },
         formClear: {
@@ -115,6 +128,19 @@ const userReducer = (state = initialState, action) => {
       };
     case actionTypes.USER_LOGOUT:
       return initialState;
+    case actionTypes.USER: {
+      const { d, r } = action.payload;
+      if (r) {
+        return {
+          ...state,
+          users: {
+            ...state.users,
+            [d._id]: d,
+          },
+        };
+      }
+      break;
+    }
     case actionTypes.USER_GET_ALL: {
       const { d, r } = action.payload;
       if (r) {
