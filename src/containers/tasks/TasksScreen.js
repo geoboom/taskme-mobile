@@ -13,8 +13,8 @@ import { Card } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 
-import { removeTask, assignmentActivity } from '../../../actions/taskActions';
-import AlertToast from '../../../components/AlertToast';
+import { removeTask, assignmentActivity } from '../../actions/taskActions';
+import AlertToast from '../../components/AlertToast';
 
 const headerStyle = {
   backgroundColor: '#FFFFFF',
@@ -64,7 +64,7 @@ const renderTaskButtons = (assnStatus, onActivity) => {
   if (!assnStatus) return null;
 
   switch (assnStatus) {
-    case 'Pending Accept':
+    case 'Pending accept':
       return (
         <View
           style={{
@@ -82,7 +82,7 @@ const renderTaskButtons = (assnStatus, onActivity) => {
           />
         </View>
       );
-    case 'Not Started':
+    case 'Not started':
       return (
         <View
           style={{
@@ -100,7 +100,7 @@ const renderTaskButtons = (assnStatus, onActivity) => {
           />
         </View>
       );
-    case 'In Progress':
+    case 'In progress':
       return (
         <View
           style={{
@@ -114,7 +114,7 @@ const renderTaskButtons = (assnStatus, onActivity) => {
           />
           <Button
             title="Mark Complete"
-            onPress={() => onActivity('Mark Complete')}
+            onPress={() => onActivity('Mark complete')}
           />
           <Button
             title="Drop"
@@ -248,7 +248,7 @@ const taskItem = (item, user, users, assnStatus, onEdit, onView, onSelect, onAct
                 : users[completedBy].username)
               : '-'}
             </Text>
-            {group === 'worker' &&
+            {group === 'standard' &&
             <View
               style={{
                   flexDirection: 'row',
@@ -518,7 +518,11 @@ class TaskScreen extends Component {
 }
 
 const mapStateToProps = (state, ownProps) => {
-  const { task: { tasks, tasksLoading }, user: { users, userData } } = state;
+  const {
+    task: { tasks, tasksLoading },
+    user: { users },
+    auth: { userData },
+  } = state;
   const { navigation } = ownProps;
   const viewedJob = navigation.getParam('viewedJob', {});
   const {
@@ -533,10 +537,10 @@ const mapStateToProps = (state, ownProps) => {
         ...tasks[id],
         _id: id,
       }))
-      .filter(x => !x.softDel && (_id ? x.jobId === _id : true))
+      .filter(x => !x.deleted && (_id ? x.jobId === _id : true))
       .filter((x) => {
         if (userData.group !== 'admin') {
-          return x.assignments.find(y => y.assignedTo === userData._id && !y.softDel);
+          return x.assignments.find(y => y.assignedTo === userData._id && !y.deleted);
         }
         return true;
       })

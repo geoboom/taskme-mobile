@@ -4,20 +4,25 @@ import {
   View,
   Text,
   TextInput,
+  Image,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Button } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 class UserForm extends Component {
   state = {
-    username: '',
-    password: '',
+    username: 'geoboomrawrxd',
+    password: 'P4ss$12345',
+    usernameIcon: null,
+    passwordIcon: null,
   };
 
-  handleSubmit = () => {
+  handleSubmit = async () => {
     const { username, password } = this.state;
-    this.props.submit(username, password);
-    if (this.props.formClear) {
+    const { submit, formUse } = this.props;
+    const res = await submit(username, password);
+    if (formUse === 'signup' && res) {
       this.setState({
         username: '',
         password: '',
@@ -25,15 +30,35 @@ class UserForm extends Component {
     }
   };
 
+  // eslint-disable-next-line react/no-typos
+  componentDidMount() {
+    Promise.all([
+      Icon.getImageSource('md-person', 25, 'white'),
+      Icon.getImageSource('md-lock', 25, 'white'),
+    ]).then((result) => {
+      this.setState({
+        usernameIcon: result[0],
+        passwordIcon: result[1],
+      });
+    });
+  }
+
   render() {
     const {
       errorMessage, isLoading, formUse, gotoSignup,
     } = this.props;
 
+    if (!(this.state.passwordIcon && this.state.usernameIcon)) return false;
+
     return (
-      <View
-        style={{
-          flex: 1,
+      <KeyboardAwareScrollView
+        enableOnAndroid
+        scrollEnabled
+        extraScrollHeight={-100}
+        resetScrollToCoords={{ x: 0, y: 0 }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          flexGrow: 1,
           justifyContent: 'center',
           alignItems: 'center',
           backgroundColor: '#005580',
@@ -76,35 +101,36 @@ class UserForm extends Component {
               alignItems: 'center',
               borderBottomWidth: 2 * StyleSheet.hairlineWidth,
               borderBottomColor: 'white',
-              marginBottom: 10,
             }}
           >
-            <View
+            <Image
+              source={this.state.usernameIcon}
+              opacity={0.7}
               style={{
-                width: 30,
-                alignItems: 'center',
-                opacity: 0.5,
+                margin: 5,
+                padding: 10,
+                width: 15,
+                resizeMode: 'contain',
               }}
-            >
-              <Icon
-                name="md-person"
-                size={25}
-                color="white"
-              />
-            </View>
+            />
             <TextInput
               style={{
                 fontSize: 16,
-                paddingBottom: 3,
+                paddingBottom: 0,
                 flex: 1,
                 color: 'white',
               }}
+              autoCorrect={false}
+              autoCapitalize="none"
               underlineColorAndroid="transparent"
               placeholder="Username"
               placeholderTextColor="#d9d9d9"
-              selectionColor="white"
+              selectionColor="grey"
               onChangeText={username => this.setState({ username })}
               value={this.state.username}
+              returnKeyType="next"
+              onSubmitEditing={() => { this.passwordInputRef.focus(); }}
+              blurOnSubmit={false}
             />
           </View>
           <View
@@ -118,33 +144,33 @@ class UserForm extends Component {
               marginBottom: 15,
             }}
           >
-            <View
+            <Image
+              source={this.state.passwordIcon}
+              opacity={0.7}
               style={{
-                width: 30,
-                alignItems: 'center',
-                opacity: 0.5,
+                margin: 5,
+                padding: 10,
+                width: 15,
+                resizeMode: 'contain',
               }}
-            >
-              <Icon
-                name="md-lock"
-                size={25}
-                color="white"
-              />
-            </View>
+            />
             <TextInput
               style={{
                 fontSize: 16,
-                paddingBottom: 3,
+                paddingBottom: 0,
                 flex: 1,
                 color: 'white',
               }}
+              ref={(input) => { this.passwordInputRef = input; }}
               underlineColorAndroid="transparent"
               placeholder="Password"
-              placeholderTextColor="#f2f2f2"
-              selectionColor="white"
+              placeholderTextColor="#d9d9d9"
+              selectionColor="grey"
               secureTextEntry
               onChangeText={password => this.setState({ password })}
               value={this.state.password}
+              returnKeyType="done"
+              onSubmitEditing={this.handleSubmit}
             />
           </View>
           <Button
@@ -170,7 +196,7 @@ class UserForm extends Component {
                 color: '#66ffff',
                 fontSize: 16,
               }}
-              onPress={() => console.log('testing')}
+              onPress={() => console.log('FORGOT PASSWORD PRESSED')}
             >
               Forgot password?
             </Text>
@@ -196,7 +222,7 @@ class UserForm extends Component {
           style={{
             position: 'absolute',
             alignItems: 'center',
-            bottom: 0,
+            bottom: 20,
             left: 0,
             right: 0,
           }}
@@ -205,27 +231,16 @@ class UserForm extends Component {
             formUse === 'login' &&
             <Text
               style={{
+                color: '#66ffff',
                 fontSize: 16,
               }}
+              onPress={gotoSignup}
             >
-              <Text
-                style={{
-                  color: '#00e6e6',
-                }}
-              >
-                Or
-              </Text> <Text
-              style={{
-                color: '#66ffff',
-              }}
-                onPress={gotoSignup}
-              >
-              create an account.
-                      </Text>
+              Create an account
             </Text>
           }
         </View>
-      </View>
+      </KeyboardAwareScrollView>
     );
   }
 }

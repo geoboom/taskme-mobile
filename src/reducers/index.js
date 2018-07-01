@@ -2,21 +2,27 @@ import {
   combineReducers,
 } from 'redux';
 
+import generalReducer from './generalReducer';
+import authReducer from './authReducer';
 import userReducer from './userReducer';
 import navReducer from './navReducer';
 import alertReducer from './alertReducer';
 import jobReducer from './jobReducer';
 import taskReducer from './taskReducer';
 import seqCountReducer from './seqCountReducer';
-import { userActionTypes } from '../constants';
+import { authActionTypes } from '../constants';
 
 export default (state, action) => {
   let finState = state;
-  if (action.type === userActionTypes.USER_LOGOUT) {
-    finState = undefined;
+  if (action.type === authActionTypes.LOGOUT) {
+    finState = {
+      general: state.general,
+    };
   }
 
   return combineReducers({
+    general: generalReducer,
+    auth: authReducer,
     job: jobReducer,
     task: taskReducer,
     user: userReducer,

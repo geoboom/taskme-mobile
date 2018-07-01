@@ -1,6 +1,5 @@
 import io from 'socket.io-client';
 import jwtDecode from 'jwt-decode';
-import axios from 'axios';
 
 import { alertError } from '../actions/alertActions';
 import {
@@ -9,83 +8,48 @@ import {
   seqCountActionTypes,
   jobTaskActionTypes,
   userActionTypes,
+  notifActionTypes,
 } from '../constants';
+import { getAccessToken } from '../actions/authActions';
+import { pushNotifications } from '../services';
 
-const refreshAccessToken = async (accessToken, refreshToken, successCb, failureCb) => {
+const socketEvents = {
+  ...jobTaskActionTypes,
+  USER: 'user',
+  USER_GET_ALL: 'user.getAll',
+  USER_GET_ALL_ERROR: 'user.getAll.error',
+};
+
+const refreshAccessToken = async (accessToken, dispatch) => {
   const exp = accessToken ? jwtDecode(accessToken).exp : null;
-
   if (!exp || exp < (Date.now() / 1000) - 60) {
-    // if token within 1 min of expiry
-    const payload = {
-      refreshToken,
-    };
-    try {
-      const response = await axios.post(
-        `${connection.SERVER_URL}/api/auth/token`,
-        payload,
-      );
-
-      const newAccessToken = response.data.accessToken;
-      return successCb(newAccessToken);
-    } catch (e) {
-      let error;
-      if (e.response) {
-        error = e.response.data;
-      } else if (e.request) {
-        error = 'Failed to connect to server.';
-      } else {
-        error = e;
-      }
-
-      return failureCb(error);
-    }
+    return dispatch(getAccessToken());
   }
-  return successCb(accessToken);
+  return accessToken;
 };
 
 const setupSocket = async (store, next) => {
-  const { accessToken, refreshToken, userData } = store.getState().user;
+  const { accessToken, userData } = store.getState().auth;
 
-  // check if jwt expired before connecting
-  let socket;
-  await refreshAccessToken(
-    accessToken,
-    refreshToken,
-    (newAccessToken) => {
-      next({
-        type: userActionTypes.USER_ACCESS_TOKEN_GET_SUCCESS,
-        payload: {
-          accessToken: newAccessToken,
-        },
-      });
-      socket = io(`${connection.SERVER_URL}?tok=${accessToken}`);
-    },
-    (error) => {
-      next({
-        type: userActionTypes.USER_ACCESS_TOKEN_GET_FAILURE,
-        payload: {
-          error,
-        },
-      });
-      next(alertError('Could not get access token.'));
-    },
-  );
+  const token = await refreshAccessToken(accessToken, store.dispatch);
+
+  const opts = {
+    reconnection: false,
+  };
+  const socket = io(`${connection.SERVER_URL}?tok=${token}`, opts);
 
   if (socket) {
-    const eventNames = Object.keys({
-      ...jobTaskActionTypes,
-      USER: 'user',
-      USER_GET_ALL: 'user.getAll',
-      USER_GET_ALL_ERROR: 'user.getAll.error',
+    Object.values(notifActionTypes).forEach((event) => {
+      socket.on(event, (payload) => {
+        console.log(`${event} notification`);
+        const { title, message } = payload;
+        pushNotifications.localNotification({
+          title, message,
+        });
+      });
     });
-    eventNames.forEach((eventName) => {
-      const event = {
-        ...jobTaskActionTypes,
-        USER: 'user',
-        USER_GET_ALL: 'user.getAll',
-        USER_GET_ALL_ERROR: 'user.getAll.error',
-      }[eventName];
 
+    Object.values(socketEvents).forEach((event) => {
       socket.on(event, (payload) => {
         console.log(`${event} success`);
         next({
@@ -108,15 +72,9 @@ const setupSocket = async (store, next) => {
     });
 
     socket.on('connect', () => {
-      // dispatch login_success
-      next({
-        type: socketActionTypes.CONNECT,
-        group: userData.group,
-        r: true,
-      });
       // bootstrap application state
       socket.emit(userActionTypes.USER_GET_ALL);
-      if (userData.group === 'worker') {
+      if (userData.group === 'standard') {
         socket.emit(jobTaskActionTypes.TASK_GET_ASSIGNED);
       }
       if (userData.group === 'admin') {
@@ -127,35 +85,9 @@ const setupSocket = async (store, next) => {
       }
     });
 
-    socket.on('reconnect_attempt', async (attemptNumber) => {
-      await refreshAccessToken(
-        accessToken,
-        refreshToken,
-        (newAccessToken) => {
-          next({
-            type: userActionTypes.USER_ACCESS_TOKEN_GET_SUCCESS,
-            payload: {
-              accessToken: newAccessToken,
-            },
-          });
-          socket.io.opts.query = {
-            tok: newAccessToken,
-          };
-        },
-        (error) => {
-          next({
-            type: userActionTypes.USER_ACCESS_TOKEN_GET_FAILURE,
-            payload: {
-              error,
-            },
-          });
-          next(alertError('Could not get access token.'));
-        },
-      );
-    });
-
     socket.on('error', (error) => {
       // check if TokenExpiredError and handle it
+      console.log('socket.io error:', error);
       next({
         type: socketActionTypes.ERROR,
         error,
@@ -175,6 +107,7 @@ const socketMiddleware = (() => {
   return store => next => async (action) => {
     switch (action.type) {
       case socketActionTypes.CONNECT:
+        console.log('socketActionTypes.CONNECT');
         if (socket) {
           socket.disconnect(true);
         }
@@ -185,15 +118,9 @@ const socketMiddleware = (() => {
           socket.disconnect(true);
         }
         socket = null;
-        next({ type: userActionTypes.USER_LOGOUT });
         break;
       default:
-        isSocketEvent = Object.values({
-          ...jobTaskActionTypes,
-          USER_GET_ALL: 'user.getAll',
-          USER_GET_ALL_ERROR: 'user.getAll.error',
-        }).includes(action.type);
-
+        isSocketEvent = Object.values(socketEvents).includes(action.type);
         if (!isSocketEvent) {
           next(action);
           break;

@@ -9,12 +9,10 @@ import {
   persistStore,
 } from 'redux-persist';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
-import {
-  createReactNavigationReduxMiddleware,
-} from 'react-navigation-redux-helpers';
+import { createReactNavigationReduxMiddleware } from 'react-navigation-redux-helpers';
 
 import rootReducer from './reducers';
-import { userAuth } from './actions/userActions';
+import { checkRefreshToken } from './actions/authActions';
 import socketMiddleware from './middleware/socketMiddleware';
 
 const navMiddleware = createReactNavigationReduxMiddleware(
@@ -28,7 +26,7 @@ const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
   stateReconciler: autoMergeLevel2,
-  whitelist: ['user', 'job', 'task'],
+  whitelist: ['auth', 'user', 'job', 'task'],
 };
 
 export const store = createStore(
@@ -36,4 +34,4 @@ export const store = createStore(
   applyMiddleware(...middleware),
 );
 
-export const persistor = persistStore(store, null, () => { store.dispatch(userAuth()); });
+export const persistor = persistStore(store, null, () => { store.dispatch(checkRefreshToken()); });

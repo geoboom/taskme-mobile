@@ -8,21 +8,15 @@ import {
 } from 'react-navigation';
 import moment from 'moment';
 
-import { socketActionTypes } from '../../constants';
-import JobStack from './jobs';
-import TaskStack from '../tasks';
-import { persistor } from '../../store';
+import { adminRoutes, standardRoutes } from './mapping';
+import { logout } from '../../actions/authActions';
 import profilePicture from '../../../profilepicture01.png';
-
-const mapStateToProps = state => ({
-  user: state.user,
-});
 
 const CustomDrawerComponent = (props) => {
   const {
-    dispatch, user, navigation, activeItemKey, items,
+    dispatch, userData, navigation, activeItemKey, items,
   } = props;
-  const { username, group, lastSuccessfulLoginTimestamp } = user.userData;
+  const { username, group, lastSuccessfulLoginTimestamp } = userData;
 
   const navigateToScreen = route => () => {
     const navigateAction = NavigationActions.navigate({
@@ -111,7 +105,9 @@ const CustomDrawerComponent = (props) => {
           ))
         }
         <TouchableOpacity
-          onPress={() => { persistor.purge(); dispatch({ type: socketActionTypes.DISCONNECT }); }}
+          onPress={() => {
+            dispatch(logout());
+          }}
         >
           <View
             style={{
@@ -133,16 +129,25 @@ const CustomDrawerComponent = (props) => {
   );
 };
 
-const AdminDrawer = createDrawerNavigator({
-  Jobs: {
-    screen: JobStack,
-  },
-  Tasks: {
-    screen: TaskStack,
-  },
-}, {
+const mapStateToProps = (state) => {
+  const { auth: { userData } } = state;
+  return {
+    userData,
+  };
+};
+
+const drawerConfig = {
   drawerWidth: 300,
   contentComponent: connect(mapStateToProps)(CustomDrawerComponent),
-});
+};
 
-export default AdminDrawer;
+
+export const MainDrawerStandard = createDrawerNavigator(
+  standardRoutes,
+  drawerConfig,
+);
+
+export const MainDrawerAdmin = createDrawerNavigator(
+  adminRoutes,
+  drawerConfig,
+);

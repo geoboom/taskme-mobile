@@ -14,8 +14,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {
   removeAssignment,
   assignmentActivity,
-} from '../../../actions/taskActions';
-import AlertToast from '../../../components/AlertToast';
+} from '../../actions/taskActions';
+import AlertToast from '../../components/AlertToast';
 
 const headerStyle = {
   backgroundColor: '#FFFFFF',

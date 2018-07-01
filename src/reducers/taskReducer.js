@@ -11,8 +11,64 @@ const initialState = {
   assignmentActivitiesPending: {},
 };
 
+const taskArrayToObject = (arr) => {
+  const transformed = {};
+
+  arr.forEach((a) => {
+    transformed[a._id] = a;
+  });
+
+  return transformed;
+};
+
 const taskReducer = (state = initialState, action) => {
   switch (action.type) {
+    case actionTypes.JOB: {
+      const { d, r } = action.payload;
+      if (r && d.deleted) {
+        // job.deleted, remove all associated tasks
+        const tasks = {};
+        Object.values(state.tasks).forEach((task) => {
+          if (!(task.jobId === d._id)) {
+            tasks[task._id] = task;
+          }
+        });
+        return {
+          ...state,
+          tasks,
+        };
+      }
+      // if !job.deleted ignore
+      return state;
+    }
+    case actionTypes.TASK_GET_ALL: {
+      const { d, r } = action.payload;
+      if (r) {
+        const transformed = taskArrayToObject(d);
+
+        return {
+          ...state,
+          tasksLoading: false,
+          tasks: transformed,
+        };
+      }
+
+      return state;
+    }
+    case actionTypes.TASK_GET_ASSIGNED: {
+      const { d, r } = action.payload;
+      if (r) {
+        const transformed = taskArrayToObject(d);
+
+        return {
+          ...state,
+          tasksLoading: false,
+          tasks: transformed,
+        };
+      }
+
+      return state;
+    }
     case actionTypes.TASK: {
       const { d, r } = action.payload;
       if (r) {
@@ -24,39 +80,8 @@ const taskReducer = (state = initialState, action) => {
           },
         };
       }
-      break;
-    }
-    case actionTypes.TASK_GET_ALL: {
-      const { d, r } = action.payload;
-      if (r) {
-        const transformed = {};
-        d.forEach((task) => {
-          transformed[task._id] = task;
-        });
 
-        return {
-          ...state,
-          tasksLoading: false,
-          tasks: transformed,
-        };
-      }
-      break;
-    }
-    case actionTypes.TASK_GET_ASSIGNED: {
-      const { d, r } = action.payload;
-      if (r) {
-        const transformed = {};
-        d.forEach((task) => {
-          transformed[task._id] = task;
-        });
-
-        return {
-          ...state,
-          tasksLoading: false,
-          tasks: transformed,
-        };
-      }
-      break;
+      return state;
     }
     case actionTypes.TASK_ADD_ERROR: {
       const { i } = action.payload;
@@ -64,7 +89,7 @@ const taskReducer = (state = initialState, action) => {
       return {
         ...state,
         taskFormLoading: false,
-        taskPending: {},
+        taskPending: {}, // only one pending task at any given time
       };
     }
     case actionTypes.TASK_ADD: {
@@ -150,7 +175,7 @@ const taskReducer = (state = initialState, action) => {
             [d._id]: {
               ...state.tasks[d._id],
               pending: false,
-              softDel: true,
+              deleted: true,
             },
           },
         };
@@ -164,7 +189,40 @@ const taskReducer = (state = initialState, action) => {
         },
       };
     }
-    // task admin complete
+    case actionTypes.TASK_ADMIN_COMPLETE_ERROR: {
+      const { d } = action.payload;
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [d._id]: { ...state.tasks[d._id], pending: false },
+        },
+      };
+    }
+    case actionTypes.TASK_ADMIN_COMPLETE: {
+      const { d, r } = action.payload;
+
+      if (r) {
+        return {
+          ...state,
+          tasks: {
+            ...state.tasks,
+            [d._id]: {
+              ...state.tasks[d._id],
+              pending: false,
+            },
+          },
+        };
+      }
+
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [d._id]: { ...state.tasks[d._id], pending: true },
+        },
+      };
+    }
     case actionTypes.TASK_ADD_ASSIGNMENT: {
       const { d, r, i } = action.payload;
       if (r) {

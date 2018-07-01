@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Image, Text } from 'react-native';
 
-import loadingGif from '../../../../animeloading01.gif';
+import loadingGif from '../../../animeloading01.gif';
 
 class AuthLoadingScreen extends Component {
   render() {

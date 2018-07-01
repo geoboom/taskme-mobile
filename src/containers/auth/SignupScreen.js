@@ -1,19 +1,20 @@
 import React, { Component } from 'react';
 import { View } from 'react-native';
 
-import AlertToast from '../../../components/AlertToast';
+import AlertToast from '../../components/AlertToast';
 import UserForm from './UserForm';
-import { userSignup } from '../../../actions/userActions';
+import { userSignup } from '../../actions/userActions';
+import { signup } from '../../actions/authActions';
 
 class SignupScreen extends Component {
   handleSubmit = (username, password) => {
     const { dispatch } = this.props;
 
-    return dispatch(userSignup(username, password));
+    return dispatch(signup(username, password));
   };
 
   render() {
-    const { formClear, errorMessage, isLoading } = this.props;
+    const { errorMessage, isLoading } = this.props;
 
     return (
       <View
@@ -27,7 +28,6 @@ class SignupScreen extends Component {
           submit={this.handleSubmit}
           errorMessage={errorMessage.signup}
           isLoading={isLoading.signup}
-          formClear={formClear.signup}
         />
       </View>
     );

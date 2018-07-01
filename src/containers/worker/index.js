@@ -9,7 +9,7 @@ import {
 import moment from 'moment';
 
 import { socketActionTypes } from '../../constants';
-import TaskStack from '../common/tasks';
+import TaskStack from '../tasks';
 import { persistor } from '../../store';
 import profilePicture from '../../../profilepicture02.png';
 

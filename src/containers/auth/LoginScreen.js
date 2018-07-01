@@ -1,19 +1,22 @@
 import React, { Component } from 'react';
 import { View } from 'react-native';
 
-import AlertToast from '../../../components/AlertToast';
+import AlertToast from '../../components/AlertToast';
 import UserForm from './UserForm';
-import { userLogin } from '../../../actions/userActions';
+import { userLogin } from '../../actions/userActions';
+import { login } from '../../actions/authActions';
 
 class LoginScreen extends Component {
-  handleSubmit = (username, password) => {
+  handleSubmit = async (username, password) => {
     const { dispatch } = this.props;
 
-    return dispatch(userLogin(username, password));
+    return dispatch(login(username, password));
   };
 
   render() {
-    const { formClear, errorMessage, isLoading, navigation } = this.props;
+    const {
+      errorMessage, isLoading, navigation,
+    } = this.props;
 
     return (
       <View
@@ -27,7 +30,6 @@ class LoginScreen extends Component {
           submit={this.handleSubmit}
           errorMessage={errorMessage.login}
           isLoading={isLoading.login}
-          formClear={formClear.login}
           gotoSignup={() => navigation.navigate('Signup')}
         />
       </View>

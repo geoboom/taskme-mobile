@@ -8,13 +8,11 @@ const mapStateToProps = (state) => {
   const {
     isLoading,
     errorMessage,
-    formClear,
-  } = state.user;
+  } = state.auth;
 
   return {
     isLoading,
     errorMessage,
-    formClear,
   };
 };
 

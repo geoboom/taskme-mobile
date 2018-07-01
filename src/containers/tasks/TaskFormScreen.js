@@ -15,8 +15,8 @@ import moment from 'moment';
 import {
   addTask,
   editTask,
-} from '../../../actions/taskActions';
-import AlertToast from '../../../components/AlertToast';
+} from '../../actions/taskActions';
+import AlertToast from '../../components/AlertToast';
 
 const ConfirmButton = ({ taskFormSubmit }) => (
   <TouchableOpacity

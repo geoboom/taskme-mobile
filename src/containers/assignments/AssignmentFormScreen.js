@@ -14,8 +14,8 @@ import {
   addAssignment,
   removeAssignment,
   promoteAssignment,
-} from '../../../actions/taskActions';
-import AlertToast from '../../../components/AlertToast';
+} from '../../actions/taskActions';
+import AlertToast from '../../components/AlertToast';
 
 const ConfirmButton = ({ assignmentFormSubmit }) => (
   <TouchableOpacity

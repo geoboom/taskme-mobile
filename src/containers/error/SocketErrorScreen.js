@@ -7,8 +7,8 @@ import {
 } from 'react-native';
 import { Button } from 'react-native-elements';
 
-import { userLogout } from '../../../actions/userActions';
-import loadingGif from '../../../../animeloading04.gif';
+import { logout } from '../../actions/authActions';
+import loadingGif from '../../../animeloading04.gif';
 
 const SocketErrorScreen = ({ navigation, dispatch }) => {
   const error = navigation.getParam('error', {});
@@ -58,7 +58,7 @@ const SocketErrorScreen = ({ navigation, dispatch }) => {
         }}
         borderRadius={20}
         title="DISCONNECT"
-        onPress={() => dispatch(userLogout())}
+        onPress={() => dispatch(logout())}
       />
     </View>
   );

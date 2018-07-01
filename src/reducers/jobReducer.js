@@ -24,7 +24,8 @@ const jobReducer = (state = initialState, action) => {
           },
         };
       }
-      break;
+
+      return state;
     }
     case actionTypes.JOB_GET_ALL: {
       const { d, r } = action.payload; // d is an array of jobs
@@ -40,7 +41,8 @@ const jobReducer = (state = initialState, action) => {
           jobs: transformed,
         };
       }
-      break;
+
+      return state;
     }
     case actionTypes.JOB_ADD_ERROR: {
       const { i } = action.payload;
@@ -168,7 +170,7 @@ const jobReducer = (state = initialState, action) => {
           },
         };
       }
-      break;
+      return state;
     }
     case actionTypes.JOB_CATEGORY_GET_ALL: {
       const { d, r } = action.payload;
@@ -183,7 +185,7 @@ const jobReducer = (state = initialState, action) => {
           categories: transformed,
         };
       }
-      break;
+      return state;
     }
     case actionTypes.JOB_CATEGORY_ADD: {
       const { i, r, d } = action.payload;
@@ -259,7 +261,8 @@ const jobReducer = (state = initialState, action) => {
           },
         };
       }
-      break;
+
+      return state;
     }
     case actionTypes.JOB_COMPONENT_GET_ALL: {
       const { d, r } = action.payload;
@@ -274,7 +277,8 @@ const jobReducer = (state = initialState, action) => {
           components: transformed,
         };
       }
-      break;
+
+      return state;
     }
     case actionTypes.JOB_COMPONENT_ADD: {
       const { i, r, d } = action.payload;
