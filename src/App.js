@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import React, { Component } from 'react';
-import { BackHandler, AppState/*, NetInfo*/ } from 'react-native';
+import { BackHandler, AppState, NetInfo } from 'react-native';
 import { connect } from 'react-redux';
 import { reduxifyNavigator } from 'react-navigation-redux-helpers';
 import { NavigationActions } from 'react-navigation';
@@ -8,6 +8,7 @@ import { NavigationActions } from 'react-navigation';
 import AppSwitchNav from './containers';
 import { socketConnect, socketDisconnect } from './actions/socketActions';
 import { appStateChange, netInfoChange } from './actions/generalActions';
+import { alertError, alertSuccess } from './actions/alertActions';
 
 const mapStateToPropsNav = state => ({
   state: state.nav,
@@ -23,6 +24,17 @@ class App extends Component {
   }
   componentDidUpdate(prevProps) {
     const { loggedIn, dispatch, appState, connectionType } = this.props;
+    if (connectionType !== prevProps.connectionType) {
+      if (connectionType === 'none') {
+        dispatch(alertError('Network connection lost!'));
+      }
+
+      if (connectionType !== 'none') {
+        dispatch(alertSuccess('Network connection regained! Attempting to' +
+          ' reconnect to server...'));
+      }
+    }
+
     if (
       loggedIn
       && appState === 'active'
