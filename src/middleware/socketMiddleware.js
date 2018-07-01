@@ -109,8 +109,10 @@ const socketMiddleware = (() => {
       case socketActionTypes.CONNECT:
         console.log('socketActionTypes.CONNECT');
         if (socket) {
+          console.log('socket.disconnect(true)');
           socket.disconnect(true);
         }
+        console.log('socket = await setupSocket(store, next)');
         socket = await setupSocket(store, next);
         break;
       case socketActionTypes.DISCONNECT:

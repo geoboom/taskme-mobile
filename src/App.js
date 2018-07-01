@@ -29,7 +29,7 @@ class App extends Component {
         dispatch(alertError('Network connection lost!'));
       }
 
-      if (connectionType !== 'none') {
+      if (connectionType !== 'none' && prevProps.connectionType !== '') {
         dispatch(alertSuccess('Network connection regained! Attempting to' +
           ' reconnect to server...'));
       }
@@ -53,12 +53,12 @@ class App extends Component {
     if (
       (
         !loggedIn
-        // || appState !== 'active'
+        || appState !== 'active'
         || connectionType === 'none'
       )
       && (
         prevProps.loggedIn !== loggedIn
-        // || prevProps.appState === 'active'
+        || prevProps.appState === 'active'
         || prevProps.connectionType !== connectionType
       )
     ) {
@@ -84,7 +84,6 @@ class App extends Component {
   };
   handleNetInfoChange = (nextConnectionInfo) => {
     const { dispatch } = this.props;
-    console.log('connectionInfo', nextConnectionInfo);
     dispatch(netInfoChange(nextConnectionInfo));
   };
 
