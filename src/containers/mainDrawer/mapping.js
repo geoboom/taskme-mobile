@@ -1,5 +1,5 @@
 import TaskStack from '../tasks';
-import JobStack from '../admin/jobs';
+import JobStack from '../jobs';
 
 export const standardRoutes = {
   Tasks: {

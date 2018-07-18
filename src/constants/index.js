@@ -7,3 +7,5 @@ export { default as alertActionTypes } from './alertActionTypes';
 export { default as socketActionTypes } from './socketActionTypes';
 export { default as seqCountActionTypes } from './seqCountActionTypes';
 export { default as connection } from './connection';
+export { default as taskGraph } from './taskGraph';
+export { default as assignmentGraph } from './assignmentGraph';

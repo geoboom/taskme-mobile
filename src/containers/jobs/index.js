@@ -4,10 +4,10 @@ import getSlideFromRightTransition from 'react-navigation-slide-from-right-trans
 
 import JobsScreen from './JobsScreen';
 import JobFormScreen from './JobFormScreen';
-import TasksScreen from '../../tasks/TasksScreen';
-import TaskFormScreen from '../../tasks/TaskFormScreen';
-import AssignmentsScreen from '../../assignments/AssignmentsScreen';
-import AssignmentFormScreen from '../../assignments/AssignmentFormScreen';
+import TasksScreen from '../tasks/TasksScreen';
+import TaskFormScreen from '../tasks/TaskFormScreen';
+import AssignmentsScreen from '../assignments/AssignmentsScreen';
+import AssignmentFormScreen from '../assignments/AssignmentFormScreen';
 
 const JobStack = createStackNavigator({
   Jobs: {

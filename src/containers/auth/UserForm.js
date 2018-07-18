@@ -12,24 +12,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 class UserForm extends Component {
   state = {
-    username: 'geoboomrawrxd',
-    password: 'P4ss$12345',
+    username: '',
+    password: '',
     // username: '',
     // password: '',
     usernameIcon: null,
     passwordIcon: null,
-  };
-
-  handleSubmit = async () => {
-    const { username, password } = this.state;
-    const { submit, formUse } = this.props;
-    const res = await submit(username, password);
-    if (formUse === 'signup' && res) {
-      this.setState({
-        username: '',
-        password: '',
-      });
-    }
   };
 
   // eslint-disable-next-line react/no-typos
@@ -44,6 +32,18 @@ class UserForm extends Component {
       });
     });
   }
+
+  handleSubmit = async () => {
+    const { username, password } = this.state;
+    const { submit, formUse } = this.props;
+    const res = await submit(username, password);
+    if (formUse === 'signup' && res) {
+      this.setState({
+        username: '',
+        password: '',
+      });
+    }
+  };
 
   render() {
     const {
@@ -164,6 +164,8 @@ class UserForm extends Component {
                 color: 'white',
               }}
               ref={(input) => { this.passwordInputRef = input; }}
+              autoCorrect={false}
+              autoCapitalize="none"
               underlineColorAndroid="transparent"
               placeholder="Password"
               placeholderTextColor="#d9d9d9"

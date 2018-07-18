@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
 import { View } from 'react-native';
 
-import AlertToast from '../../components/AlertToast';
+import AlertToast from '../../components/misc/AlertToast';
 import UserForm from './UserForm';
-import { userSignup } from '../../actions/userActions';
 import { signup } from '../../actions/authActions';
 
 class SignupScreen extends Component {

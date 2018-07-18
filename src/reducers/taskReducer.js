@@ -84,8 +84,6 @@ const taskReducer = (state = initialState, action) => {
       return state;
     }
     case actionTypes.TASK_ADD_ERROR: {
-      const { i } = action.payload;
-
       return {
         ...state,
         taskFormLoading: false,
@@ -223,24 +221,22 @@ const taskReducer = (state = initialState, action) => {
         },
       };
     }
+    case actionTypes.TASK_ADD_ASSIGNMENT_ERROR: {
+      return {
+        ...state,
+        assignmentFormLoading: false,
+        assignmentPending: {},
+      };
+    }
     case actionTypes.TASK_ADD_ASSIGNMENT: {
       const { d, r, i } = action.payload;
       if (r) {
-        // message from server
         return {
           ...state,
           assignmentFormLoading: false,
-          tasks: {
-            ...state.tasks,
-            [d._id]: {
-              ...d,
-              pending: false,
-            },
-          },
         };
       }
 
-      // message from client
       return {
         ...state,
         assignmentFormLoading: true,
@@ -249,53 +245,71 @@ const taskReducer = (state = initialState, action) => {
         },
       };
     }
-    // case actionTypes.TASK_REMOVE_ASSIGNMENT: {
-    //   const { d, r } = action.payload;
-    //   console.log('testing', d);
-    //   if (r) {
-    //     return {
-    //       ...state,
-    //       tasks: {
-    //         ...state.tasks,
-    //         [d._id]: {
-    //           ...d,
-    //           pending: false,
-    //         },
-    //       },
-    //     };
-    //   }
-    //
-    //   return {
-    //     ...state,
-    //     tasks: {
-    //       ...state.tasks,
-    //       [d.taskId]: { ...state.tasks[d.taskId], state.tasks[d.taskId].assignments},
-    //     },
-    //   };
-    // }
-    // case actionTypes.TASK_REMOVE_ASSIGNMENT_ERROR: {
-    //   const { d, r } = action.payload;
-    //   if (r) {
-    //     return {
-    //       ...state,
-    //       tasks: {
-    //         ...state.tasks,
-    //         [d._id]: {
-    //           ...d,
-    //           pending: false,
-    //         },
-    //       },
-    //     };
-    //   }
-    //
-    //   return {
-    //     ...state,
-    //     tasks: {
-    //       ...state.tasks,
-    //       [d.taskId]: { ...state.tasks[d.taskId], pending: true },
-    //     },
-    //   };
-    // }
+
+    case actionTypes.TASK_REMOVE_ASSIGNMENT: {
+      const { d, r } = action.payload;
+      if (r) {
+        return {
+          ...state,
+          tasks: {
+            ...state.tasks,
+            [d.taskId]: {
+              ...state.tasks[d.taskId],
+              assignments: state.tasks[d.taskId].assignments.map((a) => {
+                if (a.assignedTo === d.assignedTo) {
+                  return {
+                    ...a,
+
+                    pending: false,
+                  };
+                }
+                return a;
+              }),
+            },
+          },
+        };
+      }
+
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [d.taskId]: {
+            ...state.tasks[d.taskId],
+            assignments: state.tasks[d.taskId].assignments.map((a) => {
+              if (a.assignedTo === d.assignedTo) {
+                return {
+                  ...a,
+                  pending: true,
+                };
+              }
+              return a;
+            }),
+          },
+        },
+      };
+    }
+    case actionTypes.TASK_REMOVE_ASSIGNMENT_ERROR: {
+      const { d } = action.payload;
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [d.taskId]: {
+            ...state.tasks[d.taskId],
+            assignments: state.tasks[d.taskId].assignments.map((a) => {
+              if (a.assignedTo === d.assignedTo) {
+                return {
+                  ...a,
+                  pending: false,
+                };
+              }
+              return a;
+            }),
+          },
+        },
+      };
+    }
     case actionTypes.TASK_ASSIGNMENT_ACTIVITY: {
       const { d, r } = action.payload;
       if (r) {

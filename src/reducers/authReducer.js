@@ -1,6 +1,4 @@
-import {
-  authActionTypes,
-} from '../constants';
+import { authActionTypes } from '../constants';
 
 const initialState = {
   isLoading: {
@@ -90,6 +88,11 @@ const authReducer = (state = initialState, action) => {
         },
       };
     }
+    case authActionTypes.ACCESS_TOKEN_GET_SUCCESS:
+      return {
+        ...state,
+        accessToken: action.accessToken,
+      };
     default:
       return state;
   }

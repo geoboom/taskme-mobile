@@ -6,3 +6,5 @@ export const handleError = (e) => {
   }
   return e;
 };
+
+export const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));

@@ -64,4 +64,11 @@ const SocketErrorScreen = ({ navigation, dispatch }) => {
   );
 };
 
-export default connect()(SocketErrorScreen);
+const mapStateToProps = (state) => {
+  const { auth: { refreshToken } } = state;
+  return {
+    refreshToken,
+  };
+};
+
+export default connect(mapStateToProps)(SocketErrorScreen);

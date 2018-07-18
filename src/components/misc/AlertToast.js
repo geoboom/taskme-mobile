@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { View, ToastAndroid } from 'react-native';
 import { connect } from 'react-redux';
 
-import { alertClear } from '../actions/alertActions';
+import { alertClear } from '../../actions/alertActions';
 
 class AlertToast extends Component {
   state = {

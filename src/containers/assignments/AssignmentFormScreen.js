@@ -15,7 +15,8 @@ import {
   removeAssignment,
   promoteAssignment,
 } from '../../actions/taskActions';
-import AlertToast from '../../components/AlertToast';
+import AlertToast from '../../components/misc/AlertToast';
+import { HeaderBackButton } from '../../components/common';
 
 const ConfirmButton = ({ assignmentFormSubmit }) => (
   <TouchableOpacity
@@ -29,18 +30,25 @@ const ConfirmButton = ({ assignmentFormSubmit }) => (
     >
       <Icon
         name="md-checkmark"
+        color="white"
         size={35}
       />
     </View>
   </TouchableOpacity>
 );
 
+const headerStyle = {
+  backgroundColor: '#45598E',
+};
+
 class TaskFormScreen extends Component {
   static navigationOptions = ({ navigation }) => {
     const params = navigation.state.params || {};
 
     return ({
-      headerTitle: <Text>Add New Assignment</Text>,
+      headerStyle,
+      headerTitle: <Text style={{ color: 'white', fontSize: 18 }}>Add new assignment</Text>,
+      headerLeft: <HeaderBackButton navigation={navigation} />,
       headerRight: <ConfirmButton assignmentFormSubmit={params.assignmentFormSubmit} />,
     });
   };
@@ -91,15 +99,22 @@ class TaskFormScreen extends Component {
         </Text>
         <Picker
           style={{ width: 225 }}
+          enabled={users.length > 0}
           selectedValue={this.state.assignedTo}
           onValueChange={assignedTo => this.setState({ assignedTo })}
         >
-          {users.map((user) => {
-            const { _id, username } = user;
-            return (
-              <Picker.Item key={_id} label={username} value={_id} />
-            );
-          })}
+          {
+            users.length > 0
+              ?
+              users.map((user) => {
+                const { _id, username } = user;
+                return (
+                  <Picker.Item key={_id} label={username} value={_id} />
+                );
+              })
+              :
+              <Picker.Item label="-" />
+          }
         </Picker>
         {
           formLoading
@@ -113,18 +128,22 @@ class TaskFormScreen extends Component {
   }
 }
 
-const mapStateToProps = (state) => {
-  const { users } = state.user;
-  const { taskFormLoading } = state.task;
+const mapStateToProps = (state, ownProps) => {
+  const { user: { users }, task: { tasks, assignmentFormLoading } } = state;
+  const { params: { taskId } } = ownProps.navigation.state;
+  const activeMembers = [];
+  tasks[taskId].assignments.forEach((a) => {
+    if (!a.deleted) activeMembers.push(a.assignedTo);
+  });
 
   return {
-    formLoading: taskFormLoading,
+    formLoading: assignmentFormLoading,
     users: Object.keys(users)
       .map(id => ({
         ...users[id],
         _id: id,
       }))
-      .filter(user => user.group !== 'admin')
+      .filter(user => user.group !== 'admin' && !activeMembers.includes(user._id))
       .sort((a, b) => a.username.localeCompare(b.username)),
   };
 };

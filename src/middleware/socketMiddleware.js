@@ -11,7 +11,9 @@ import {
   notifActionTypes,
 } from '../constants';
 import { getAccessToken } from '../actions/authActions';
+import { socketConnect, socketDisconnect } from '../actions/socketActions';
 import { pushNotifications } from '../services';
+import { timeout } from '../utils';
 
 const socketEvents = {
   ...jobTaskActionTypes,
@@ -22,7 +24,7 @@ const socketEvents = {
 
 const refreshAccessToken = async (accessToken, dispatch) => {
   const exp = accessToken ? jwtDecode(accessToken).exp : null;
-  if (!exp || exp < (Date.now() / 1000) - 60) {
+  if (!exp || exp < Date.now()/1000 + 60) {
     return dispatch(getAccessToken());
   }
   return accessToken;
@@ -51,7 +53,7 @@ const setupSocket = async (store, next) => {
 
     Object.values(socketEvents).forEach((event) => {
       socket.on(event, (payload) => {
-        console.log(`${event} success`);
+        // console.log(`${event} success`);
         next({
           type: event,
           payload: {
@@ -85,6 +87,17 @@ const setupSocket = async (store, next) => {
       }
     });
 
+    socket.on('disconnect', () => {
+      const { refreshToken } = store.getState().auth;
+      console.log('============ socket.io disconnected =================');
+      if (refreshToken !== '') {
+        console.log('dispatch(socketDisconnect())');
+        store.dispatch(socketDisconnect());
+        console.log('dispatch(socketConnect())');
+        store.dispatch(socketConnect());
+      }
+    });
+
     socket.on('error', (error) => {
       // check if TokenExpiredError and handle it
       console.log('socket.io error:', error);
@@ -101,22 +114,41 @@ const setupSocket = async (store, next) => {
 };
 
 const socketMiddleware = (() => {
+  let readyToConnect = false;
   let socket = null;
+  let isConnecting = false;
   let isSocketEvent;
 
   return store => next => async (action) => {
     switch (action.type) {
       case socketActionTypes.CONNECT:
-        console.log('socketActionTypes.CONNECT');
+        readyToConnect = true;
         if (socket) {
           console.log('socket.disconnect(true)');
           socket.disconnect(true);
         }
-        console.log('socket = await setupSocket(store, next)');
-        socket = await setupSocket(store, next);
+        if (!isConnecting) {
+          isConnecting = true;
+          console.log('============ socket.io connect attempt =================');
+          await timeout(500);
+          if (readyToConnect) {
+            socket = await setupSocket(store, next);
+          }
+          isConnecting = false;
+        }
+        // console.log('socketActionTypes.CONNECT');
+        // if (!socket && !isConnecting) {
+        //   isConnecting = true;
+        //   console.log('============ connection attempt ==============');
+        //   socket = await setupSocket(store, next);
+        //   isConnecting = false;
+        // }
         break;
       case socketActionTypes.DISCONNECT:
+        readyToConnect = false;
+        console.log('socketActionTypes.DISCONNECT');
         if (socket) {
+          console.log('socket.disconnect(true)');
           socket.disconnect(true);
         }
         socket = null;

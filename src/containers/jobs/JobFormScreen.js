@@ -17,8 +17,9 @@ import {
   removeCategory,
   addComponent,
   removeComponent,
-} from '../../../actions/jobActions';
-import AlertToast from '../../../components/AlertToast';
+} from '../../actions/jobActions';
+import AlertToast from '../../components/misc/AlertToast';
+import { HeaderBackButton } from '../../components/common';
 
 const ConfirmButton = ({ jobFormSubmit }) => (
   <TouchableOpacity
@@ -32,11 +33,16 @@ const ConfirmButton = ({ jobFormSubmit }) => (
     >
       <Icon
         name="md-checkmark"
+        color="white"
         size={35}
       />
     </View>
   </TouchableOpacity>
 );
+
+const headerStyle = {
+  backgroundColor: '#45598E',
+};
 
 class JobFormScreen extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -45,7 +51,27 @@ class JobFormScreen extends Component {
 
     return ({
       // title dependent on whether form state is editing or adding
-      headerTitle: _id ? <Text>Editing {_id.toString()}</Text> : <Text>Add New Job</Text>,
+      headerStyle,
+      headerTitle: _id
+        ?
+          <Text
+            style={{
+          color: 'white',
+              fontSize: 18,
+        }}
+          >
+            Editing job:{'\n'}{_id.toString()}
+          </Text>
+        :
+          <Text
+            style={{
+          color: 'white',
+              fontSize: 18,
+        }}
+          >
+        Add new job
+          </Text>,
+      headerLeft: <HeaderBackButton navigation={navigation} />,
       headerRight: <ConfirmButton jobFormSubmit={params.jobFormSubmit} />,
     });
   };
@@ -144,9 +170,9 @@ class JobFormScreen extends Component {
         </Text>
         <TextInput
           autoFocus
+          maxLength={45}
           style={{
             fontSize: 18,
-            height: 40,
           }}
           onChangeText={title => this.setState({ title })}
           value={this.state.title}
@@ -156,7 +182,7 @@ class JobFormScreen extends Component {
         </Text>
         <TextInput
           multiline
-          maxLength={120}
+          maxLength={160}
           numberOfLines={2}
           style={{
             fontSize: 18,

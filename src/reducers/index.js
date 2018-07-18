@@ -1,6 +1,4 @@
-import {
-  combineReducers,
-} from 'redux';
+import { combineReducers } from 'redux';
 
 import generalReducer from './generalReducer';
 import authReducer from './authReducer';
@@ -22,10 +20,10 @@ export default (state, action) => {
 
   return combineReducers({
     general: generalReducer,
+    user: userReducer,
     auth: authReducer,
     job: jobReducer,
     task: taskReducer,
-    user: userReducer,
     nav: navReducer,
     alert: alertReducer,
     seqCount: seqCountReducer,

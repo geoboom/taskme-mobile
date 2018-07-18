@@ -1,14 +1,21 @@
+import PushNotification from 'react-native-push-notification';
 import axios from 'axios';
 
 import { authActionTypes, connection } from '../constants';
 import { socketDisconnect } from './socketActions';
 import { alertSuccess, alertError } from './alertActions';
 import { handleError } from '../utils';
+import { pushNotifications } from '../services';
 
 // const getUser = () => (
 //   async (dispatch) => {
 //   }
 // );
+
+const setupPushNotifications = (refreshToken) => {
+  pushNotifications.configure(refreshToken);
+  PushNotification.requestPermissions();
+};
 
 export const checkRefreshToken = () => (
   (dispatch, getState) => {
@@ -18,6 +25,7 @@ export const checkRefreshToken = () => (
         type: authActionTypes.AUTH_LOCAL_SUCCESS,
         group,
       });
+      setupPushNotifications(refreshToken);
       // dispatch(getUser);
       return true;
     }
@@ -108,13 +116,15 @@ export const login = (username, password) => (
       );
       dispatch({
         type: authActionTypes.LOGIN_SUCCESS,
-        refreshToken,
         userData,
+        refreshToken,
       });
       dispatch({
         type: authActionTypes.AUTH_LOCAL_SUCCESS,
         group: userData.group,
       });
+      setupPushNotifications(refreshToken);
+
       return true;
     } catch (e) {
       const errorMessage = handleError(e);
@@ -128,11 +138,23 @@ export const login = (username, password) => (
 );
 
 export const logout = () => (
-  (dispatch) => {
-    dispatch(socketDisconnect());
+  (dispatch, getState) => {
+    const { auth: { refreshToken } } = getState();
     dispatch({
       type: authActionTypes.LOGOUT,
     });
+    dispatch(socketDisconnect());
+    if (refreshToken) {
+      const payload = {
+        refreshToken,
+      };
+      axios.post(
+        `${connection.SERVER_URL}/api/auth/logout`,
+        payload,
+      )
+        .then(reply => console.log('logout success:', reply))
+        .catch(err => console.log('logout error:', err));
+    }
   }
 );
 

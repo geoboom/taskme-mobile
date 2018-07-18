@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Picker,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import DatePicker from 'react-native-datepicker';
@@ -16,7 +15,8 @@ import {
   addTask,
   editTask,
 } from '../../actions/taskActions';
-import AlertToast from '../../components/AlertToast';
+import AlertToast from '../../components/misc/AlertToast';
+import { HeaderBackButton } from '../../components/common';
 
 const ConfirmButton = ({ taskFormSubmit }) => (
   <TouchableOpacity
@@ -30,11 +30,16 @@ const ConfirmButton = ({ taskFormSubmit }) => (
     >
       <Icon
         name="md-checkmark"
+        color="white"
         size={35}
       />
     </View>
   </TouchableOpacity>
 );
+
+const headerStyle = {
+  backgroundColor: '#45598E',
+};
 
 class TaskFormScreen extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -42,7 +47,21 @@ class TaskFormScreen extends Component {
     const { _id } = params.editedTask || {};
 
     return ({
-      headerTitle: _id ? <Text>Editing {_id.toString()}</Text> : <Text>Add New Task</Text>,
+      headerStyle,
+      headerTitle: _id
+        ?
+          <Text
+            style={{ color: 'white', fontSize: 18 }}
+          >
+              Editing task:{'\n'}{_id.toString()}
+          </Text>
+        :
+          <Text
+            style={{ color: 'white', fontSize: 18 }}
+          >
+          Add new task
+          </Text>,
+      headerLeft: <HeaderBackButton navigation={navigation} />,
       headerRight: <ConfirmButton taskFormSubmit={params.taskFormSubmit} />,
     });
   };
@@ -52,13 +71,13 @@ class TaskFormScreen extends Component {
     const editedTask = props.navigation.getParam('editedTask', {});
 
     const {
-      title, description, type, dueOn,
+      title, description, dueOn,
     } = editedTask;
 
     this.state = {
       title: title || '',
       description: description || '',
-      type: type || 'Inspection',
+      type: 'Inspection',
       dueOn: dueOn ? moment(dueOn).format('DD-MM-YYYY') : '',
     };
   }
@@ -122,10 +141,10 @@ class TaskFormScreen extends Component {
           Title
         </Text>
         <TextInput
-          autoFocus
+          autoFocuj
+          maxLength={30}
           style={{
             fontSize: 18,
-            height: 40,
           }}
           onChangeText={title => this.setState({ title })}
           value={this.state.title}
@@ -135,7 +154,7 @@ class TaskFormScreen extends Component {
         </Text>
         <TextInput
           multiline
-          maxLength={120}
+          maxLength={160}
           numberOfLines={2}
           style={{
             fontSize: 18,
@@ -144,17 +163,6 @@ class TaskFormScreen extends Component {
           onChangeText={description => this.setState({ description })}
           value={this.state.description}
         />
-        <Text>
-          Type
-        </Text>
-        <Picker
-          selectedValue={this.state.type}
-          enabled={false}
-          onValueChange={type => this.setState({ type })}
-        >
-          <Picker.Item label="Inspection" value="Inspection" />
-          <Picker.Item label="Survey" value="Survey" />
-        </Picker>
         <Text>
           Due on
         </Text>

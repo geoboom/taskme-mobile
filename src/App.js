@@ -23,7 +23,9 @@ class App extends Component {
     // NetInfo.addEventListener('connectionChange', this.handleNetInfoChange);
   }
   componentDidUpdate(prevProps) {
-    const { loggedIn, dispatch, appState, connectionType } = this.props;
+    const {
+      loggedIn, dispatch, appState, connectionType,
+    } = this.props;
     if (connectionType !== prevProps.connectionType) {
       if (connectionType === 'none') {
         dispatch(alertError('Network connection lost!'));
@@ -50,27 +52,28 @@ class App extends Component {
       dispatch(socketConnect());
     }
 
-    if (
-      (
-        !loggedIn
-        || appState !== 'active'
-        || connectionType === 'none'
-      )
-      && (
-        prevProps.loggedIn !== loggedIn
-        || prevProps.appState === 'active'
-        || prevProps.connectionType !== connectionType
-      )
-    ) {
-      console.log('dispatch(socketDisconnect())');
-      dispatch(socketDisconnect());
-    }
+    // if (
+    //   (
+    //     !loggedIn
+    //     || appState !== 'active'
+    //     || connectionType === 'none'
+    //   )
+    //   && (
+    //     prevProps.loggedIn !== loggedIn
+    //     || prevProps.appState === 'active'
+    //     || prevProps.connectionType !== connectionType
+    //   )
+    // ) {
+    //   console.log('dispatch(socketDisconnect())');
+    //   dispatch(socketDisconnect());
+    // }
   }
   componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.onBackPress);
     AppState.removeEventListener('change', this.handleAppStateChange);
     NetInfo.removeEventListener('connectionChange', this.handleNetInfoChange);
     const { dispatch } = this.props;
+    console.log('dispatch(socketDisconnect())');
     dispatch(socketDisconnect());
   }
   onBackPress = () => {
