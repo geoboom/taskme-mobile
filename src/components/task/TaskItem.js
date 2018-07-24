@@ -9,7 +9,7 @@ import { Card, Divider, Button } from 'react-native-elements';
 import IconFA from 'react-native-vector-icons/FontAwesome';
 import moment from 'moment';
 
-import { taskGraph } from '../../constants';
+import { assignmentGraph, taskGraph } from '../../constants';
 
 const buttonRowStyle = {
   marginTop: 15,
@@ -30,102 +30,92 @@ const buttonStyle = {
   borderRadius: 5,
 };
 
+const TaskButton = ({ title, onPress }) => (
+  <Button
+    buttonStyle={buttonStyle}
+    titleStype={buttonTitleStyle}
+    containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
+    title={title}
+    onPress={onPress}
+  />
+);
+
+const assignmentStatusToActions = {
+  [assignmentGraph.V_PENDING_ACCEPT]: [
+    'Accept',
+    'Reject',
+  ],
+  [assignmentGraph.V_NOT_STARTED]: [
+    'Start',
+    'Drop',
+  ],
+  [assignmentGraph.V_IN_PROGRESS]: [
+    'Pause',
+    'Mark complete',
+    'Drop',
+  ],
+  [assignmentGraph.V_PAUSED]: [
+    'Resume',
+    'Drop',
+  ],
+};
+
 const RenderTaskButtons = ({ assignmentStatus, onActivity }) => {
   if (!assignmentStatus) return null;
 
   switch (assignmentStatus) {
-    case 'Pending accept':
+    case assignmentGraph.V_PENDING_ACCEPT:
       return (
         <View
           style={buttonRowStyle}
         >
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Accept"
-            onPress={() => onActivity('Accept')}
-          />
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Reject"
-            onPress={() => onActivity('Reject')}
-          />
+          {
+            assignmentStatusToActions[assignmentGraph.V_PENDING_ACCEPT].map(action => (<TaskButton
+              title={action}
+              onPress={() => onActivity(action)}
+            />))
+          }
         </View>
       );
-    case 'Not started':
+    case assignmentGraph.V_NOT_STARTED:
       return (
         <View
           style={buttonRowStyle}
         >
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Start"
-            onPress={() => onActivity('Start')}
-          />
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Drop"
-            onPress={() => onActivity('Drop')}
-          />
+          {
+            assignmentStatusToActions[assignmentGraph.V_NOT_STARTED].map(action => (<TaskButton
+              title={action}
+              onPress={() => onActivity(action)}
+            />))
+          }
         </View>
       );
-    case 'In progress':
+    case assignmentGraph.V_IN_PROGRESS:
       return (
         <View
           style={buttonRowStyle}
         >
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Pause"
-            onPress={() => onActivity('Pause')}
-          />
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Mark complete"
-            onPress={() => onActivity('Mark complete')}
-          />
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Drop"
-            onPress={() => onActivity('Drop')}
-          />
+          {
+            assignmentStatusToActions[assignmentGraph.V_IN_PROGRESS].map(action => (<TaskButton
+              title={action}
+              onPress={() => onActivity(action)}
+            />))
+          }
         </View>
       );
-    case 'Paused':
+    case assignmentGraph.V_PAUSED:
       return (
         <View
           style={buttonRowStyle}
         >
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Resume"
-            onPress={() => onActivity('Resume')}
-          />
-          <Button
-            buttonStyle={buttonStyle}
-            titleStyle={buttonTitleStyle}
-            containerViewStyle={{ marginLeft: 0, marginRight: 0 }}
-            title="Drop"
-            onPress={() => onActivity('Drop')}
-          />
+          {
+            assignmentStatusToActions[assignmentGraph.V_PAUSED].map(action => (<TaskButton
+              title={action}
+              onPress={() => onActivity(action)}
+            />))
+          }
         </View>
       );
-    case 'Completed':
     default:
       return null;
   }

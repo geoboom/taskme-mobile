@@ -19,6 +19,7 @@
     "react-native-elements": "^0.19.1",
     "react-native-keyboard-aware-scroll-view": "^0.6.0",
     "react-native-navbar": "^2.1.0",
+    "react-native-offline": "^3.11.0",
     "react-native-push-notification": "^3.0.2",
     "react-native-vector-icons": "^4.6.0",
     "react-navigation": "^2.6.2",
@@ -41,7 +42,8 @@
     "eslint-plugin-react": "^7.10.0",
     "jest": "23.1.0",
     "prettier": "1.13.3",
-    "react-test-renderer": "16.4.0"
+    "react-test-renderer": "16.4.0",
+    "redux-saga": "^0.16.0"
   },
   "jest": {
     "preset": "react-native"

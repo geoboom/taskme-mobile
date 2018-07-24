@@ -1,9 +1,10 @@
 import io from 'socket.io-client';
 import jwtDecode from 'jwt-decode';
 
-import { alertError } from '../actions/alertActions';
+import { alertSuccess, alertError } from '../actions/alertActions';
 import {
   connection,
+  generalActionTypes,
   socketActionTypes,
   seqCountActionTypes,
   jobTaskActionTypes,
@@ -24,7 +25,7 @@ const socketEvents = {
 
 const refreshAccessToken = async (accessToken, dispatch) => {
   const exp = accessToken ? jwtDecode(accessToken).exp : null;
-  if (!exp || exp < Date.now()/1000 + 60) {
+  if (!exp || exp < (Date.now() / 1000) + 60) {
     return dispatch(getAccessToken());
   }
   return accessToken;
@@ -32,13 +33,19 @@ const refreshAccessToken = async (accessToken, dispatch) => {
 
 const setupSocket = async (store, next) => {
   const { accessToken, userData } = store.getState().auth;
+  const { isConnected } = store.getState().network;
 
+  if (!isConnected) return null;
+
+  let socket;
   const token = await refreshAccessToken(accessToken, store.dispatch);
 
-  const opts = {
-    reconnection: false,
-  };
-  const socket = io(`${connection.SERVER_URL}?tok=${token}`, opts);
+  if (token) {
+    const opts = {
+      reconnection: false,
+    };
+    socket = io(`${connection.SERVER_URL}?tok=${token}`, opts);
+  }
 
   if (socket) {
     Object.values(notifActionTypes).forEach((event) => {
@@ -75,6 +82,8 @@ const setupSocket = async (store, next) => {
 
     socket.on('connect', () => {
       // bootstrap application state
+      store.dispatch(alertSuccess('Connected'));
+      store.dispatch({ type: generalActionTypes.SOCKET_CONNECTED });
       socket.emit(userActionTypes.USER_GET_ALL);
       if (userData.group === 'standard') {
         socket.emit(jobTaskActionTypes.TASK_GET_ASSIGNED);
@@ -88,6 +97,7 @@ const setupSocket = async (store, next) => {
     });
 
     socket.on('disconnect', () => {
+      store.dispatch({ type: generalActionTypes.SOCKET_DISCONNECTED });
       const { refreshToken } = store.getState().auth;
       console.log('============ socket.io disconnected =================');
       if (refreshToken !== '') {
@@ -101,10 +111,17 @@ const setupSocket = async (store, next) => {
     socket.on('error', (error) => {
       // check if TokenExpiredError and handle it
       console.log('socket.io error:', error);
-      next({
-        type: socketActionTypes.ERROR,
-        error,
-      });
+      try {
+        const errorObject = JSON.parse(error);
+        if (errorObject.type === 'authentication') {
+          next({
+            type: socketActionTypes.ERROR,
+            error: errorObject.message,
+          });
+        }
+      } catch (e) {
+        console.log('not JSON:', e);
+      }
     });
 
     return socket;
@@ -136,13 +153,6 @@ const socketMiddleware = (() => {
           }
           isConnecting = false;
         }
-        // console.log('socketActionTypes.CONNECT');
-        // if (!socket && !isConnecting) {
-        //   isConnecting = true;
-        //   console.log('============ connection attempt ==============');
-        //   socket = await setupSocket(store, next);
-        //   isConnecting = false;
-        // }
         break;
       case socketActionTypes.DISCONNECT:
         readyToConnect = false;
@@ -160,8 +170,8 @@ const socketMiddleware = (() => {
           break;
         }
 
-        if (!socket) {
-          next(alertError('Connection error.'));
+        if (!socket || !socket.connected) {
+          next(alertError('Could not perform action: no internet connection.'));
         } else {
           const payload = {
             d: action.payload,

@@ -60,8 +60,8 @@ export const getAccessToken = () => (
         type: authActionTypes.ACCESS_TOKEN_GET_FAILURE,
         errorMessage,
       });
-      dispatch(alertError('Could not get access token.'));
-      return '';
+      dispatch(alertError(`Could not get access token. Please restart the app. Error: ${errorMessage}`));
+      return null;
     }
   }
 );

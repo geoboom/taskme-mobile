@@ -36,7 +36,7 @@ const SocketErrorScreen = ({ navigation, dispatch }) => {
           color: 'orange',
         }}
       >
-        {error}
+        {error.toString()}
       </Text>
       <Image
         style={{

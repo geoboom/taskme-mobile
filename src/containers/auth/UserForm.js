@@ -14,8 +14,6 @@ class UserForm extends Component {
   state = {
     username: '',
     password: '',
-    // username: '',
-    // password: '',
     usernameIcon: null,
     passwordIcon: null,
   };

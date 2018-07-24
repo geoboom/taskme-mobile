@@ -1,4 +1,5 @@
 import { combineReducers } from 'redux';
+import { reducer as network } from 'react-native-offline';
 
 import generalReducer from './generalReducer';
 import authReducer from './authReducer';
@@ -15,6 +16,7 @@ export default (state, action) => {
   if (action.type === authActionTypes.LOGOUT) {
     finState = {
       general: state.general,
+      network: state.network,
     };
   }
 
@@ -27,5 +29,6 @@ export default (state, action) => {
     nav: navReducer,
     alert: alertReducer,
     seqCount: seqCountReducer,
+    network,
   })(finState, action);
 };

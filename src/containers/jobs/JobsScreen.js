@@ -1,12 +1,17 @@
 /* eslint-disable no-plusplus */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { View } from 'react-native';
+import { View, Text } from 'react-native';
 
-import { HeaderAddButton, HeaderMenuButton, NavHeaderTitle, ExtraOptionsModal } from '../../components/common';
+import {
+  HeaderAddButton,
+  HeaderMenuButton,
+  NavHeaderTitle,
+  ExtraOptionsModal,
+} from '../../components/common';
 import { JobItems } from '../../components/job';
 import { removeJob } from '../../actions/jobActions';
-import { AlertToast } from '../../components/misc';
+import { AlertToast, ConnectionStatusBar } from '../../components/misc';
 import { taskGraph } from '../../constants';
 
 const headerStyle = {
@@ -69,7 +74,7 @@ class JobsScreen extends Component {
   };
 
   render() {
-    const { jobs, jobsLoading } = this.props;
+    const { jobs, jobsLoading, isConnected } = this.props;
 
     return (
       <View
@@ -104,7 +109,16 @@ class JobsScreen extends Component {
 }
 
 const mapStateToProps = (state) => {
-  const { job: { jobs, jobsLoading }, task: { tasks } } = state;
+  const {
+    job: {
+      jobs,
+      jobsLoading,
+    },
+    task: {
+      tasks,
+    },
+  } = state;
+
   const taskArray = Object.keys(tasks)
     .map(id => ({ ...tasks[id], _id: id }))
     .filter(x => !x.deleted);
