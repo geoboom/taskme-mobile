@@ -7,28 +7,46 @@ import {
 import {
   persistReducer,
   persistStore,
+  createTransform,
 } from 'redux-persist';
-import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
-import {
-  createReactNavigationReduxMiddleware,
-} from 'react-navigation-redux-helpers';
+import { createReactNavigationReduxMiddleware } from 'react-navigation-redux-helpers';
 
 import rootReducer from './reducers';
-import { userAuth } from './actions/userActions';
+import { checkRefreshToken } from './actions/authActions';
 import socketMiddleware from './middleware/socketMiddleware';
 
 const navMiddleware = createReactNavigationReduxMiddleware(
-  'root',
-  state => state.nav,
+  'root', state => state.nav,
 );
 
 const middleware = [thunk, navMiddleware, socketMiddleware];
 
+const authTransform = createTransform(
+  (inboundState) => {
+    const { refreshToken, accessToken, userData } = inboundState;
+    return { refreshToken, accessToken, userData };
+  },
+  outboundState => ({
+    isLoading: {
+      login: false,
+      signup: false,
+    },
+    errorMessage: {
+      login: '',
+      signup: '',
+    },
+    ...outboundState,
+  }),
+  {
+    whitelist: ['auth'],
+  },
+);
+
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  stateReconciler: autoMergeLevel2,
-  whitelist: ['user', 'job', 'task'],
+  whitelist: ['auth', 'user', 'job', 'task'],
+  transforms: [authTransform],
 };
 
 export const store = createStore(
@@ -36,4 +54,4 @@ export const store = createStore(
   applyMiddleware(...middleware),
 );
 
-export const persist = persistStore(store, null, () => { store.dispatch(userAuth()); });
+export const persistor = persistStore(store, null, () => { store.dispatch(checkRefreshToken()); });

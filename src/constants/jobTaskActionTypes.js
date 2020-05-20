@@ -24,13 +24,10 @@ const TASK_ACTIONS = {
   EDIT: 'edit',
   REMOVE: 'remove',
   ADMIN_COMPLETE: 'adminComplete',
-};
-
-const TASK_ASSIGNMENT_ACTIONS = {
-  ADD: 'add',
-  REMOVE: 'remove',
-  PROMOTE: 'promote',
-  ACTIVITY: 'activity',
+  ADD_ASSIGNMENT: 'addAssignment',
+  REMOVE_ASSIGNMENT: 'removeAssignment',
+  PROMOTE_ASSIGNMENT: 'promoteAssignment',
+  ASSIGNMENT_ACTIVITY: 'assignmentActivity',
 };
 
 const mapActions = (property, actionNamesToActions) => {
@@ -38,12 +35,21 @@ const mapActions = (property, actionNamesToActions) => {
   const propertyWithActions = {};
   let actionName;
 
+  propertyWithActions[
+    property.toUpperCase()
+  ] = property; // e.g. { JOB: 'job' }
+
   for (let i = 0; i < actionNames.length; i += 1) {
     actionName = actionNames[i];
 
     propertyWithActions[
       `${property.toUpperCase()}_${actionName}`
     ] = `${property}.${actionNamesToActions[actionName]}`;
+    // e.g. { JOB_ADD: 'job.add' }
+    propertyWithActions[
+      `${property.toUpperCase()}_${actionName}_ERROR`
+    ] = `${property}.${actionNamesToActions[actionName]}.error`;
+    // e.g. { JOB_ADD_ERROR: 'job.add.error' }
   }
 
   return propertyWithActions;
@@ -55,10 +61,7 @@ const jobWithActions = {
   ...mapActions('job', mapActions('component', JOB_COMPONENT_ACTIONS)),
 };
 
-const taskWithActions = {
-  ...mapActions('task', TASK_ACTIONS),
-  ...mapActions('task', mapActions('assignment', TASK_ASSIGNMENT_ACTIONS)),
-};
+const taskWithActions = mapActions('task', TASK_ACTIONS);
 
 const extraActions = {
   JOB_DETAILS_VIEW: 'job.details.view',

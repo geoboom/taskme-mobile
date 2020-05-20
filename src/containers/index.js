@@ -1,26 +1,24 @@
 import { createSwitchNavigator } from 'react-navigation';
 
-import AuthLoadingScreen from './common/auth/AuthLoadingScreen';
-import AuthTabs from './common/auth/AuthTabs';
-import AdminDrawer from './admin';
+import AuthLoadingScreen from './auth/AuthLoadingScreen';
+import AuthTabs from './auth/AuthTabs';
+import { MainDrawerStandard, MainDrawerAdmin } from './mainDrawer';
+import { SocketErrorScreen } from './error';
 
 export default createSwitchNavigator({
   AuthLoading: {
     screen: AuthLoadingScreen,
-    // navigationOptions: {
-    //   header: null,
-    // },
   },
   AuthTabs: {
     screen: AuthTabs,
-    // navigationOptions: {
-    //   header: null,
-    // },
   },
-  Admin: {
-    screen: AdminDrawer,
-    // navigationOptions: {
-    //   title: 'Testing',
-    // },
+  MainDrawerStandard: {
+    screen: MainDrawerStandard,
+  },
+  MainDrawerAdmin: {
+    screen: MainDrawerAdmin,
+  },
+  SocketError: {
+    screen: SocketErrorScreen,
   },
 });

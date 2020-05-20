@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "336245440544",
+    "firebase_url": "https://taskme-app-project.firebaseio.com",
+    "project_id": "taskme-app-project",
+    "storage_bucket": "taskme-app-project.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:336245440544:android:106ac3e845c9dc30",
+        "android_client_info": {
+          "package_name": "com.taskmemobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "336245440544-emk82os126auo0vvhrld3f8h85tlk5eo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsVISoJVqnzg2goAM1ZTAehrQQseLqy1Q"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,120 +1,127 @@
 import io from 'socket.io-client';
 import jwtDecode from 'jwt-decode';
-import axios from 'axios';
 
-import {
-  alertError,
-} from '../actions/alertActions';
+import { alertSuccess, alertError } from '../actions/alertActions';
 import {
   connection,
+  generalActionTypes,
   socketActionTypes,
+  seqCountActionTypes,
   jobTaskActionTypes,
   userActionTypes,
+  notifActionTypes,
 } from '../constants';
+import { getAccessToken } from '../actions/authActions';
+import { socketConnect, socketDisconnect } from '../actions/socketActions';
+import { pushNotifications } from '../services';
+import { timeout } from '../utils';
 
-const refreshAccessToken = async (accessToken, refreshToken, successCb, failureCb) => {
-  let exp;
+const socketEvents = {
+  ...jobTaskActionTypes,
+  USER: 'user',
+  USER_GET_ALL: 'user.getAll',
+  USER_GET_ALL_ERROR: 'user.getAll.error',
+};
 
-  if (accessToken) {
-    exp = jwtDecode(accessToken).exp;
+const refreshAccessToken = async (accessToken, dispatch) => {
+  const exp = accessToken ? jwtDecode(accessToken).exp : null;
+  if (!exp || exp < (Date.now() / 1000) + 60) {
+    return dispatch(getAccessToken());
   }
-
-  if (!exp || exp < (Date.now() / 1000) - 60) {
-    // if token within 1 min of expiry
-    const payload = {
-      refreshToken,
-    };
-    try {
-      const response = await axios.post(
-        `${connection.SERVER_URL}/api/auth/token`,
-        payload,
-      );
-
-      const newAccessToken = response.data.accessToken;
-      return successCb(newAccessToken);
-    } catch (e) {
-      let error;
-      if (e.response) {
-        error = e.response.data;
-      } else if (e.request) {
-        error = 'Failed to connect to server.';
-      } else {
-        error = e;
-      }
-
-      return failureCb(error);
-    }
-  }
-  return successCb(accessToken);
+  return accessToken;
 };
 
 const setupSocket = async (store, next) => {
-  const { accessToken, refreshToken } = store.getState().user;
+  const { accessToken, userData } = store.getState().auth;
+  const { isConnected } = store.getState().network;
 
-  // check if jwt expired before connecting
+  if (!isConnected) return null;
+
   let socket;
-  await refreshAccessToken(
-    accessToken,
-    refreshToken,
-    (newAccessToken) => {
-      next({
-        type: userActionTypes.USER_ACCESS_TOKEN_GET_SUCCESS,
-        payload: {
-          accessToken: newAccessToken,
-        },
-      });
-      socket = io(`${connection.WS_URL}?tok=${accessToken}`);
-    },
-    (error) => {
-      next({
-        type: userActionTypes.USER_ACCESS_TOKEN_GET_FAILURE,
-        payload: {
-          error,
-        },
-      });
-      next(alertError('Could not get access token.'));
-    },
-  );
+  const token = await refreshAccessToken(accessToken, store.dispatch);
+
+  if (token) {
+    const opts = {
+      reconnection: false,
+    };
+    socket = io(`${connection.SERVER_URL}?tok=${token}`, opts);
+  }
 
   if (socket) {
-    const events = Object.keys(jobTaskActionTypes);
-    events.forEach((event) => {
-      socket.on(event, payload => next({
-        type: jobTaskActionTypes[event],
-        payload,
-      }));
+    Object.values(notifActionTypes).forEach((event) => {
+      socket.on(event, (payload) => {
+        console.log(`${event} notification`);
+        const { title, message } = payload;
+        pushNotifications.localNotification({
+          title, message,
+        });
+      });
     });
 
-    socket.on('reconnect_attempt', async (attemptNumber) => {
-      await refreshAccessToken(
-        accessToken,
-        refreshToken,
-        (newAccessToken) => {
-          next({
-            type: userActionTypes.USER_ACCESS_TOKEN_GET_SUCCESS,
-            payload: {
-              accessToken: newAccessToken,
-            },
-          });
-          socket.io.opts.query = {
-            tok: newAccessToken,
-          };
-        },
-        (error) => {
-          next({
-            type: userActionTypes.USER_ACCESS_TOKEN_GET_FAILURE,
-            payload: {
-              error,
-            },
-          });
-          next(alertError('Could not get access token.'));
-        },
-      );
+    Object.values(socketEvents).forEach((event) => {
+      socket.on(event, (payload) => {
+        // console.log(`${event} success`);
+        next({
+          type: event,
+          payload: {
+            ...payload,
+            r: true,
+          },
+        });
+      });
+
+      socket.on(`${event}.error`, (payload) => {
+        console.log(`${event} failure`);
+        next({
+          type: `${event}.error`,
+          payload,
+        });
+        next(alertError(`${event} failed. Please try again.`));
+      });
+    });
+
+    socket.on('connect', () => {
+      // bootstrap application state
+      store.dispatch(alertSuccess('Connected'));
+      store.dispatch({ type: generalActionTypes.SOCKET_CONNECTED });
+      socket.emit(userActionTypes.USER_GET_ALL);
+      if (userData.group === 'standard') {
+        socket.emit(jobTaskActionTypes.TASK_GET_ASSIGNED);
+      }
+      if (userData.group === 'admin') {
+        socket.emit(jobTaskActionTypes.TASK_GET_ALL);
+        socket.emit(jobTaskActionTypes.JOB_GET_ALL);
+        socket.emit(jobTaskActionTypes.JOB_CATEGORY_GET_ALL);
+        socket.emit(jobTaskActionTypes.JOB_COMPONENT_GET_ALL);
+      }
+    });
+
+    socket.on('disconnect', () => {
+      store.dispatch({ type: generalActionTypes.SOCKET_DISCONNECTED });
+      const { refreshToken } = store.getState().auth;
+      console.log('============ socket.io disconnected =================');
+      if (refreshToken !== '') {
+        console.log('dispatch(socketDisconnect())');
+        store.dispatch(socketDisconnect());
+        console.log('dispatch(socketConnect())');
+        store.dispatch(socketConnect());
+      }
     });
 
     socket.on('error', (error) => {
       // check if TokenExpiredError and handle it
       console.log('socket.io error:', error);
+      try {
+        const errorObject = JSON.parse(error);
+        if (errorObject.type === 'authentication') {
+          next({
+            type: socketActionTypes.ERROR,
+            error: errorObject.message,
+          });
+        }
+      } catch (e) {
+        console.log('not JSON:', e);
+      }
     });
 
     return socket;
@@ -124,36 +131,57 @@ const setupSocket = async (store, next) => {
 };
 
 const socketMiddleware = (() => {
+  let readyToConnect = false;
   let socket = null;
-  let socketEvent;
+  let isConnecting = false;
+  let isSocketEvent;
 
-  return store => next => (action) => {
+  return store => next => async (action) => {
     switch (action.type) {
       case socketActionTypes.CONNECT:
+        readyToConnect = true;
         if (socket) {
+          console.log('socket.disconnect(true)');
           socket.disconnect(true);
         }
-        socket = setupSocket(store, next);
+        if (!isConnecting) {
+          isConnecting = true;
+          console.log('============ socket.io connect attempt =================');
+          await timeout(500);
+          if (readyToConnect) {
+            socket = await setupSocket(store, next);
+          }
+          isConnecting = false;
+        }
         break;
       case socketActionTypes.DISCONNECT:
+        readyToConnect = false;
+        console.log('socketActionTypes.DISCONNECT');
         if (socket) {
+          console.log('socket.disconnect(true)');
           socket.disconnect(true);
         }
         socket = null;
         break;
       default:
-        socketEvent = jobTaskActionTypes[action.type];
-
-        if (!socketEvent) {
-          return next(action);
+        isSocketEvent = Object.values(socketEvents).includes(action.type);
+        if (!isSocketEvent) {
+          next(action);
+          break;
         }
 
-        if (!socket) {
-          store.dispatch({ type: socketActionTypes.CONNECT });
+        if (!socket || !socket.connected) {
+          next(alertError('Could not perform action: no internet connection.'));
+        } else {
+          const payload = {
+            d: action.payload,
+            i: store.getState().seqCount.i,
+          };
+          socket.emit(action.type, payload);
+          next({ type: action.type, payload });
+          next({ type: seqCountActionTypes.SEQ_INCREMENT });
         }
-        socket.emit(socketEvent, action.payload);
     }
-    return next();
   };
 })();
 

@@ -1,18 +1,5 @@
 import { jobTaskActionTypes as actionTypes } from '../constants';
 
-export function viewTaskDetails(taskId) {
-  return {
-    type: actionTypes.TASK_DETAILS_VIEW,
-    taskId,
-  };
-}
-
-export function unviewTaskDetails() {
-  return {
-    type: actionTypes.TASK_DETAILS_UNVIEW,
-  };
-}
-
 export function getAllTasks() {
   return {
     type: actionTypes.TASK_GET_ALL,
@@ -46,7 +33,7 @@ export function editTask(_id, title, description) {
 export function removeTask(_id) {
   return {
     type: actionTypes.TASK_REMOVE,
-    payload: _id,
+    payload: { _id },
   };
 }
 
@@ -57,32 +44,32 @@ export function adminCompleteTask(_id) {
   };
 }
 
-export function addAssignment(taskId, userId) {
+export function addAssignment(taskId, assignedTo) {
   return {
-    type: actionTypes.TASK_ASSIGNMENT_ADD,
+    type: actionTypes.TASK_ADD_ASSIGNMENT,
     payload: {
       taskId,
-      userId,
+      assignedTo,
     },
   };
 }
 
-export function removeAssignment(taskId, userId) {
+export function removeAssignment(taskId, assignedTo) {
   return {
-    type: actionTypes.TASK_ASSIGNMENT_REMOVE,
+    type: actionTypes.TASK_REMOVE_ASSIGNMENT,
     payload: {
       taskId,
-      userId,
+      assignedTo,
     },
   };
 }
 
-export function promoteAssignment(taskId, userId) {
+export function promoteAssignment(taskId, assignedTo) {
   return {
-    type: actionTypes.TASK_ASSIGNMENT_PROMOTE,
+    type: actionTypes.TASK_PROMOTE_ASSIGNMENT,
     payload: {
       taskId,
-      userId,
+      assignedTo,
     },
   };
 }
@@ -96,3 +83,4 @@ export function assignmentActivity(taskId, activity) {
     },
   };
 }
+

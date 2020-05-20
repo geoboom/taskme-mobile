@@ -1,18 +1,5 @@
 import { jobTaskActionTypes as actionTypes } from '../constants';
 
-export function viewJobDetails(jobId) {
-  return {
-    type: actionTypes.JOB_DETAILS_VIEW,
-    jobId,
-  };
-}
-
-export function unviewJobDetails() {
-  return {
-    type: actionTypes.JOB_DETAILS_UNVIEW,
-  };
-}
-
 export function getAllJobs() {
   return {
     type: actionTypes.JOB_GET_ALL,
@@ -47,7 +34,7 @@ export function editJob(_id, title, description, category, component) {
 export function removeJob(_id) {
   return {
     type: actionTypes.JOB_REMOVE,
-    payload: _id,
+    payload: { _id },
   };
 }
 
@@ -60,14 +47,14 @@ export function getAllCategories() {
 export function addCategory(category) {
   return {
     type: actionTypes.JOB_CATEGORY_ADD,
-    payload: category,
+    payload: { category },
   };
 }
 
 export function removeCategory(_id) {
   return {
     type: actionTypes.JOB_CATEGORY_REMOVE,
-    payload: _id,
+    payload: { _id },
   };
 }
 
@@ -80,13 +67,13 @@ export function getAllComponents() {
 export function addComponent(component) {
   return {
     type: actionTypes.JOB_COMPONENT_ADD,
-    payload: component,
+    payload: { component },
   };
 }
 
 export function removeComponent(_id) {
   return {
     type: actionTypes.JOB_COMPONENT_REMOVE,
-    payload: _id,
+    payload: { _id },
   };
 }

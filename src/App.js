@@ -1,54 +1,111 @@
+/* eslint-disable no-console */
 import React, { Component } from 'react';
-import { BackHandler } from 'react-native';
+import { BackHandler, AppState, NetInfo } from 'react-native';
 import { connect } from 'react-redux';
-import {
-  createReduxBoundAddListener,
-} from 'react-navigation-redux-helpers';
-import {
-  NavigationActions,
-} from 'react-navigation';
+import { reduxifyNavigator } from 'react-navigation-redux-helpers';
+import { NavigationActions } from 'react-navigation';
+import { withNetworkConnectivity } from 'react-native-offline';
 
 import AppSwitchNav from './containers';
-import socketActionTypes from './constants';
+import { socketConnect, socketDisconnect } from './actions/socketActions';
+import { appStateChange, netInfoChange } from './actions/generalActions';
+import { alertError, alertSuccess } from './actions/alertActions';
 
-const addListener = createReduxBoundAddListener('root');
+const mapStateToPropsNav = state => ({
+  state: state.nav,
+});
+
+const AppWithNavigationState = connect(mapStateToPropsNav)(reduxifyNavigator(AppSwitchNav, 'root'));
 
 class App extends Component {
   componentDidMount() {
     BackHandler.addEventListener('hardwareBackPress', this.onBackPress);
+    AppState.addEventListener('change', this.handleAppStateChange);
+    NetInfo.addEventListener('connectionChange', this.handleNetInfoChange);
+  }
+  componentDidUpdate(prevProps) {
+    const {
+      loggedIn, dispatch, appState, connectionType, isConnected, socketConnection,
+    } = this.props;
+
+    if (
+      loggedIn
+      && socketConnection === 'disconnected'
+      && appState === 'active'
+      && connectionType !== 'none'
+      && isConnected
+      && (
+        prevProps.loggedIn !== loggedIn
+        || prevProps.appState !== 'active'
+        || prevProps.connectionType !== connectionType
+        || !prevProps.isConnected
+      )
+    ) {
+      // if logged in and client is online
+      console.log('dispatch(socketConnect())');
+      dispatch(alertSuccess('Connecting to server...'));
+      dispatch(socketConnect());
+    }
   }
   componentWillUnmount() {
     BackHandler.removeEventListener('hardwareBackPress', this.onBackPress);
-    this.props.dispatch({
-      type: socketActionTypes.DISCONNECT,
-    });
-    console.log('disconnect');
+    AppState.removeEventListener('change', this.handleAppStateChange);
+    NetInfo.removeEventListener('connectionChange', this.handleNetInfoChange);
+    const { dispatch } = this.props;
+    console.log('dispatch(socketDisconnect())');
+    dispatch(socketDisconnect());
   }
   onBackPress = () => {
     const { dispatch, nav } = this.props;
-    if (nav.index === 0) { return false; }
     dispatch(NavigationActions.back());
-    return true;
+    return nav !== this.props.nav;
+  };
+  handleAppStateChange = (nextAppState) => {
+    const { dispatch } = this.props;
+    dispatch(appStateChange(nextAppState));
+  };
+  handleNetInfoChange = (nextConnectionInfo) => {
+    const { dispatch } = this.props;
+    dispatch(netInfoChange(nextConnectionInfo));
   };
 
   render() {
-    const { dispatch, nav } = this.props;
-    const navigation = {
-      dispatch,
-      state: nav,
-      addListener,
-    };
-
     return (
-      <AppSwitchNav
-        navigation={navigation}
-      />
+      <AppWithNavigationState />
     );
   }
 }
 
-const mapStateToProps = state => ({
-  nav: state.nav,
-});
+const mapStateToProps = (state) => {
+  const {
+    nav,
+    auth: {
+      refreshToken,
+    },
+    general: {
+      appState,
+      connectionType,
+      socketConnection,
+    },
+    network: {
+      isConnected,
+    },
+  } = state;
+  return {
+    socketConnection,
+    connectionType,
+    appState,
+    nav,
+    loggedIn: refreshToken,
+    isConnected,
+  };
+};
 
-export default connect(mapStateToProps)(App);
+const ConnectedApp = connect(mapStateToProps)(App);
+
+const opts = {
+  withRedux: true,
+  checkConnectionInterval: 3000,
+};
+
+export default withNetworkConnectivity(opts)(ConnectedApp);
